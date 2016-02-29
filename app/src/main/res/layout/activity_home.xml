@@ -15,4 +15,17 @@
         android:text="Hello World!"
         android:id="@+id/textView" />
 
+    <ImageView
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:id="@+id/imageView"
+        android:src="@drawable/dw_logo_1"
+        android:nestedScrollingEnabled="true"
+        android:baselineAlignBottom="false"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp" />
+        <!--android:layout_above="@+id/takeQuizButton"-->
+
+
 </RelativeLayout>
