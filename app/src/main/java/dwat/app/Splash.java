@@ -14,11 +14,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 public class Splash extends Activity {
 
     private static int SPLASH_TIME = 3000;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
+//    protected  boolean _active = true;
+//    protected int _splashTime = 3000;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,12 +29,33 @@ public class Splash extends Activity {
         new Handler().postDelayed(new Runnable(){
             @Override
             public void run(){
-                Intent intent = new Intent(Splash.this, CameraView.class);
-                startActivity(intent);
+                Intent intent = new Intent(Splash.this, Camera_Main.class);
+               startActivity(intent);
                 finish();
             }
 
         }, SPLASH_TIME);
-
+//        Thread splashThread = new Thread(){
+//            @Override
+//            public void run(){
+//                try {
+//                    int waited = 0;
+//                    while (_active && (waited < _splashTime)) {
+//                        sleep(100);
+//                        if (_active) {
+//                            waited += 100;
+//                        }
+//                    }
+//                } catch (Exception e) {
+//
+//                } finally {
+//
+//                    startActivity(new Intent(Splash.this,
+//                            Camera_Main.class));
+//                    finish();
+//                }
+//            };
+//        };
+//        splashThread.start();
     }
 }
