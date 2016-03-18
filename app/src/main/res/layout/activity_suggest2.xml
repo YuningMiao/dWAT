@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="History Suggestions"
+        android:id="@+id/suggestText1"
+        android:layout_margin="10dp" />
+
+    <ListView
+        android:id="@+id/suggestList1"
+        android:listSelector="#5297EC"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Location Suggestions"
+        android:id="@+id/suggestText2"
+        android:layout_margin="10dp" />
+
+    <ListView
+        android:id="@+id/suggestList2"
+        android:listSelector="#5297EC"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Take Picture"
+        android:id="@+id/take_pic_button"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="10dp"
+        android:onClick="take_pic_pressed"/>
+</LinearLayout>
