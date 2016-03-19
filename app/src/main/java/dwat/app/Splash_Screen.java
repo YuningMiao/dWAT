@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Window;
 
 
 public class Splash_Screen extends Activity {
@@ -13,6 +14,7 @@ public class Splash_Screen extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splashscreen);
 
@@ -28,5 +30,9 @@ public class Splash_Screen extends Activity {
             }
 
         }, SPLASH_TIME);
+    }
+
+    @Override
+    public void onBackPressed() {
     }
 }

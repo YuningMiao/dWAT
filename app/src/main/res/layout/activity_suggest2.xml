@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+                android:id="@+id/suggestScreen">
 
     <TextView
         android:layout_width="wrap_content"
@@ -9,16 +10,23 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="History Suggestions"
         android:id="@+id/suggestText1"
-        android:layout_margin="10dp" />
+        android:layout_marginLeft="25dp"
+        android:layout_marginRight="25dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentLeft="true" />
 
     <ListView
         android:id="@+id/suggestList1"
-        android:listSelector="#5297EC"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="150dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="10dp" />
+        android:layout_marginLeft="25dp"
+        android:layout_marginRight="25dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/suggestText1" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -26,23 +34,30 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Location Suggestions"
         android:id="@+id/suggestText2"
-        android:layout_margin="10dp" />
+        android:layout_below="@+id/suggestList1"
+        android:layout_alignStart="@+id/suggestText1"
+        android:layout_marginTop="25dp" />
 
     <ListView
         android:id="@+id/suggestList2"
-        android:listSelector="#5297EC"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="10dp" />
-
-    <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Take Picture"
-        android:id="@+id/take_pic_button"
-        android:layout_gravity="center_horizontal"
-        android:layout_margin="10dp"
-        android:onClick="take_pic_pressed"/>
-</LinearLayout>
+        android:layout_height="150dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginRight="25dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/suggestText2" />
+
+    <ImageButton
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        android:id="@+id/cameraButton"
+        android:src="@drawable/camera"
+        android:background="@null"
+        android:scaleType="centerCrop"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="50dp"/>
+
+</RelativeLayout>

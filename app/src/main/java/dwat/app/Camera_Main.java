@@ -10,76 +10,112 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.Date;
 
 public class Camera_Main extends FragmentActivity {
-    Uri fileUri = null;
-    ImageView picImg = null;
-//    MyAdapter mAdapter;
-//    ViewPager mPager;
+
+    private static final int CAMERA_REQUEST = 1888;
+    private ImageView picImg;
+    String curDate;
+    String curLoc;
+    RelativeLayout screen;
+
+    private String getCurDate() {
+        Calendar c = Calendar.getInstance();
+
+        curDate = c.get(Calendar.MONTH) + 1 + "-" + c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.YEAR) + " ";
+        curDate += c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
+        return curDate;
+    }
+
+    private String getCurLocation() {
+//        LocationManager locManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        CurLocationListner locListner = new CurLocationListner();
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//            return TODO;
+//        }
+//        locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locListner);
+//        return curLoc;
+        return null;
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        File file = getOutputPhotoFile();
-        fileUri = Uri.fromFile(getOutputPhotoFile());
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+        picImg = (ImageView)findViewById(R.id.foodPic);
 
-        startActivityForResult(intent, 0);
-    }
-
-    private File getOutputPhotoFile(){
-        File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),getPackageName());
-        if(!directory.exists()){
-            if(!directory.mkdirs()){
-                Log.e("MMM", "Failed to create storage directory");
-                return null;
+        screen = (RelativeLayout) findViewById(R.id.cameraScreen);
+        screen.setOnTouchListener(new OnSwipeTouchListener(Camera_Main.this){
+            public void onSwipeRight(){
+                Intent intent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+                startActivity(intent);
             }
-        }
-        String timeStamp = new SimpleDateFormat("yyMMdd_HHmmss", Locale.US).format(new Date());
-        return new File(directory.getPath() + File.separator + "IMG_" + timeStamp + ".jpg");
+        });
+
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        startActivityForResult(intent, CAMERA_REQUEST);
+
+        Button backBttn = (Button) findViewById(R.id.backButton);
+        Button addBttn = (Button) findViewById(R.id.addButton);
+        backBttn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent backIntent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+                startActivity(backIntent);
+            }
+        });
+        addBttn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                History newMeal;
+                if(getCurLocation() == null) {
+                    newMeal = new History("Tags", getCurDate());
+                }
+                else
+                    newMeal = new History("Tags", getCurDate(), getCurLocation());
+                Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(Camera_Main.this, History_Screen.class);
+                intent.putExtra("meal", newMeal);
+                startActivity(intent);
+            }
+        });
     }
+
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 0) {
-            if (resultCode == RESULT_OK) {
-                Uri photoUri = null;
-                if (data == null) {
-                    // A known bug here! The image should have saved in fileUri
-                    Toast.makeText(this, "Image saved successfully",
-                            Toast.LENGTH_LONG).show();
-                    photoUri = fileUri;
-
-                } else {
-                    photoUri = data.getData();
-                    Toast.makeText(this, "Image saved successfully in: " + data.getData(),
-                            Toast.LENGTH_LONG).show();
-                }
-                showPhoto(photoUri);
-            } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Callout for image capture failed!",
-                        Toast.LENGTH_LONG).show();
-            }
+        if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK){
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            picImg.setImageBitmap(photo);
         }
+
     }
 
-    private void showPhoto(Uri photoUri) {
-        File imageFile = new File(String.valueOf(photoUri));
-        if (imageFile.exists()){
-            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-            BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmap);
-            picImg.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            picImg.setImageDrawable(drawable);
-        }
+    @Override
+    public void onBackPressed() {
     }
-
 }

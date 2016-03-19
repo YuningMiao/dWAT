@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -16,11 +16,12 @@
         tools:ignore="Suspicious0dp"
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
-        android:layout_marginBottom="100dp" />
+        android:layout_marginBottom="100dp"
+        android:scaleType="fitCenter" />
     <!--android:nestedScrollingEnabled="true"-->
     <!--android:layout_height="250dp"-->
     <!--android:baselineAlignBottom="false"-->
     <!--android:layout_centerInParent="true"-->
     <!--android:layout_alignParentEnd="false"-->
     <!--android:scaleType="center"-->
-</LinearLayout>
+</RelativeLayout>
