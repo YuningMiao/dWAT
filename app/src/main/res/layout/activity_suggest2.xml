@@ -49,15 +49,24 @@
         android:layout_below="@+id/suggestText2" />
 
     <ImageButton
-        android:layout_width="75dp"
-        android:layout_height="75dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/refreshButton"
+        android:src="@drawable/location"
+        android:background="@null"
+        android:scaleType="centerCrop"
+        android:layout_alignEnd="@+id/suggestList1"
+        android:layout_alignTop="@+id/suggestText2"/>
+
+    <ImageButton
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/cameraButton"
         android:src="@drawable/camera"
         android:background="@null"
         android:scaleType="centerCrop"
-        android:layout_alignParentBottom="true"
-        android:layout_centerInParent="true"
-        android:layout_marginTop="50dp"
-        android:layout_marginBottom="50dp"/>
+        android:layout_marginTop="20dp"
+        android:layout_below="@+id/suggestList2"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>
