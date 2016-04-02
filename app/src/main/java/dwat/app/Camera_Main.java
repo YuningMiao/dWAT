@@ -15,6 +15,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -111,6 +112,28 @@ public class Camera_Main extends FragmentActivity {
         if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK){
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             picImg.setImageBitmap(photo);
+
+//
+//                if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK){
+                TextView photoTags = (TextView) findViewById(R.id.photoTags);
+
+//                Bitmap photo = (Bitmap) data.getExtras().get("data");
+//                picImg.setImageBitmap(photo);
+
+//
+//            VisualRecognition service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
+//            service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
+//
+//            File image = new File("src/test/resources/visual_recognition/car.png");
+//
+//            System.out.println("Classify using all the classifiers");
+//            VisualClassification result = service.classify(image);
+////            System.out.println(result);
+////
+//
+//            photoTags.setText((CharSequence) result);
+
+
         }
 
     }

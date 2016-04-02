@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="C:\Users\Allison\AppData\Local\Android\sdk\extras\android\m2repository\com\android\support\support-annotations\23.2.0\support-annotations-23.2.0.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="c5bf571bb10462bd90e5419ade67793f71acbc87">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\support-annotations-23.2.0_63c21a0bc2c83393530c7c4ee779fb6dd628ae39.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.google.android.gms\play-services-maps\8.1.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="2a7e47da654546f9457deb6132364f1bf33a1857">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.google.android.gms-play-services-maps-8.1.0_6bd224f40ae5b54a167dd9bec3fb4afd0489d786.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.2.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="6e3578f92f7462d1a935a1d36173e3bdd1234976">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.android.support-appcompat-v7-23.2.0_3c45eacbf9e80eea0454ed436dad2b6b573d8188.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.android.support\animated-vector-drawable\23.2.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="8c108c22c99e794eff255bb34d2a461200c4cbb0">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.android.support-animated-vector-drawable-23.2.0_3d37de6885c685e256ef463527a673efb8d71f25.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.android.support\support-vector-drawable\23.2.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="292a9fa091757208efa65e77eef63088247e51f3">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.android.support-support-vector-drawable-23.2.0_424f832f11cfc81592f341e4c1c9de02f27de770.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.google.android.gms\play-services-base\8.1.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="82825756edeeb3b56b15e73b2edd56e93da5a444">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.google.android.gms-play-services-base-8.1.0_5f367133a5ffa6c4d0d84b8f0cadc4a95be0f042.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.2.0\jars\libs\internal_impl-23.2.0.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="6e239441500605809818997dd63b62a947195f8c">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\internal_impl-23.2.0_fa5ffba77f784f692295b84574ee65071a0b3b78.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.google.android.gms\play-services-location\8.1.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="3aed37c38c56679602255dd72ef356da5d327cda">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.google.android.gms-play-services-location-8.1.0_46fc036ce10c1803d23fc4ab0eb5dde5581e3d27.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.google.android.gms\play-services-basement\8.1.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="d0dda274b703dd9c5bb056867649d22b4171ae7d">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.google.android.gms-play-services-basement-8.1.0_381a08f5dad87977489b2825cf23e43253a29a1f.jar" />
+    </item>
+    <item
+        jar="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.2.0\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="e5f32fa48a3eb2de0c987025c11b6e3864b634d9">
+        <dex dex="C:\Users\Allison\Downloads\dWAT\app\build\intermediates\pre-dexed\debug\com.android.support-support-v4-23.2.0_e8af121e97f2fae38bcb0723b92e35a2e4750ae3.jar" />
+    </item>
+
+</items>

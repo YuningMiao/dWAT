@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="java-sdk-2.9.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ibm.watson.developer_cloud/java-sdk/2.9.0/45fb77d1fb6e2524202606c4d5a5ce6b8a68bdbc/java-sdk-2.9.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ibm.watson.developer_cloud/java-sdk/2.9.0/9980196136c9ef94f920e939b662de1f51cfaf0c/java-sdk-2.9.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
