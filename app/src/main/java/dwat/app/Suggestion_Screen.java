@@ -67,13 +67,13 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		setContentView(R.layout.activity_suggest2);
 
 		mGoogleApiClient = new GoogleApiClient
-				.Builder( this )
-				.enableAutoManage( this, 0, this )
-				.addApi( Places.GEO_DATA_API )
-				.addApi( Places.PLACE_DETECTION_API )
-				.addConnectionCallbacks( this )
-				.addOnConnectionFailedListener( this )
-				.build();
+			.Builder( this )
+			.enableAutoManage( this, 0, this )
+			.addApi( Places.GEO_DATA_API )
+			.addApi( Places.PLACE_DETECTION_API )
+			.addConnectionCallbacks( this )
+			.addOnConnectionFailedListener( this )
+			.build();
 
 		guessCurrentPlace();
 
@@ -206,19 +206,16 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		});
 	}
 
-
 	@Override
 	public void onBackPressed() {
 	}
 
 	@Override
 	public void onConnected(Bundle bundle) {
-
 	}
 
 	@Override
 	public void onConnectionSuspended(int i) {
-
 	}
 
 	@Override

@@ -77,7 +77,7 @@ public class Camera_Main extends FragmentActivity {
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        startActivityForResult(intent, CAMERA_REQUEST);
+        startActivityForResult(intent, 0);
 
         Button backBttn = (Button) findViewById(R.id.backButton);
         Button addBttn = (Button) findViewById(R.id.addButton);
