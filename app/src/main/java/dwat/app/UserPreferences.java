@@ -1,8 +1,12 @@
 package dwat.app;
+
+import java.lang.String;
 import java.util.*;
-import java.text.*;
 
 import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -11,23 +15,28 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.HashMap;
 
 public class UserPreferences {
-    public void send() {
+    public void RequestMenu(String manufacturer) {
         try {
-            String message = URLEncoder.encode("my message", "UTF-8");
+            HashMap<String, String> messageMap = new HashMap<String, String>();
+            messageMap.put("data", "menu");
+            messageMap.put("manf", manufacturer);
+            JSONObject reqObj = new JSONObject(messageMap);
+            String message = URLEncoder.encode(reqObj.toString(), "UTF-8");
 
             URL url = new URL("http://uxkkad247118.xlaresix.koding.io:3000/");
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
-            //connection.getHeaderFields().put()
             OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
             writer.write(message);
             writer.close();
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 String response = connection.getResponseMessage();
+                JSONObject respObj = new JSONObject(response);
                 Log.d("SERVCOMM", "response: " + response);
             } else {
                 Log.d("SERVCOMM", "Bad response: " + connection.getResponseCode());
@@ -38,9 +47,47 @@ public class UserPreferences {
 
         } catch (IOException e) {
 
-        }
+        } catch (JSONException e) {
 
+        }
     }
+
+    public void RequestFoodDescription(String manufacturer, String foodname) {
+        try {
+            HashMap<String, String> messageMap = new HashMap<String, String>();
+            messageMap.put("data", "fooddesc");
+            messageMap.put("foodname", foodname);
+            messageMap.put("manf", manufacturer);
+            JSONObject reqObj = new JSONObject(messageMap);
+
+            String message = URLEncoder.encode(reqObj.toString(), "UTF-8");
+
+            URL url = new URL("http://uxkkad247118.xlaresix.koding.io:3000/");
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+            OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+            writer.write(message);
+            writer.close();
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                String response = connection.getResponseMessage();
+                JSONObject respObj = new JSONObject(response);
+                Log.d("SERVCOMM", "response: " + response);
+            } else {
+                Log.d("SERVCOMM", "Bad response: " + connection.getResponseCode());
+            }
+        } catch (UnsupportedEncodingException e) {
+
+        } catch (ProtocolException e) {
+
+        } catch (IOException e) {
+
+        } catch (JSONException e) {
+
+        }
+    }
+
     public static double valueFunction(MealEntry meal, String foodName, String location, Date date, int maxCount){
         double value = 0;
         if (foodName.length() > 0){

@@ -1,3 +1,5 @@
+package dwat.app;
+
 import java.util.*;
 
 public class MealEntry{
