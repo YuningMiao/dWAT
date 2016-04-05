@@ -5,6 +5,7 @@ import java.util.*;
 
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,9 +19,36 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 
 public class UserPreferences {
+    public class NoSuchMenuException extends Exception { public NoSuchMenuException(String s) { super(s); }}
+    public class NoSuchFoodException extends Exception {}
+    public class FoodDescription {
+        public String FoodManf;
+        public String FoodName;
+        public int ServingSize;
+        public int Calories;
+        public int CaloriesFromFat;
+        public int TotalFat;
+        public int SaturatedFat;
+        public int TransFat;
+        public int Cholesterol;
+        public int Sodium;
+        public int Carbohydrates;
+        public int DietaryFiber;
+        public int Sugars;
+        public int Protein;
+
+        public boolean isValidFoodDescription(JSONObject obj) {
+            return obj.has("FoodManf") && obj.has("FoodName") && obj.has("ServingSize") &&
+                    obj.has("Calories") && obj.has("CaloriesFromFat") && obj.has("TotalFat") &&
+                    obj.has("SaturatedFat") && obj.has("TransFat") && obj.has("Cholesterol") &&
+                    obj.has("Sodium") && obj.has("Carbohydrates") && obj.has("DietaryFiber") &&
+                    obj.has("Sugars") && obj.has("Protein");
+        }
+    }
+
     private final String host = "dwat.us-2.evennode.com";
 
-    public void RequestMenu(String manufacturer) {
+    public String[] RequestMenu(String manufacturer) throws NoSuchMenuException {
         try {
             JSONObject reqObj = new JSONObject();
             reqObj.put("data", "menu");
@@ -38,17 +66,24 @@ public class UserPreferences {
             writer.close();
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 String response = connection.getResponseMessage();
-                JSONObject respObj = new JSONObject(response);
-                Log.d("SERVCOMM", "response: " + response);
+                JSONArray respArr = new JSONArray(message);
+                Log.d("SERVCOMM", "Menu response: " + respArr.getString(0));
+                String[] menu = new String[respArr.length()];
+                for(int i=0;i<respArr.length();i++) {
+                    menu[i] = respArr.getString(i);
+                }
+                return menu;
             } else {
                 Log.d("SERVCOMM", "Bad response: " + connection.getResponseCode());
+                throw new NoSuchMenuException("Bad response " + connection.getResponseCode());
             }
         } catch (IOException | JSONException e) {
             Log.d("SERVCOMM", e.getMessage());
+            throw new NoSuchMenuException(e.getMessage());
         }
     }
 
-    public void RequestFoodDescription(String manufacturer, String foodname) {
+    public FoodDescription RequestFoodDescription(String manufacturer, String foodname) throws NoSuchFoodException {
         try {
             JSONObject reqObj = new JSONObject();
             reqObj.put("data", "fooddesc");
@@ -67,13 +102,33 @@ public class UserPreferences {
             writer.close();
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 String response = connection.getResponseMessage();
-                JSONObject respObj = new JSONObject(response);
                 Log.d("SERVCOMM", "response: " + response);
+                JSONObject respObj = new JSONObject(response);
+                FoodDescription fd = new FoodDescription();
+                if(fd.isValidFoodDescription(respObj)) {
+                    fd.FoodManf = respObj.getString("FoodManf");
+                    fd.FoodName = respObj.getString("FoodName");
+                    fd.Calories = respObj.getInt("Calories");
+                    fd.CaloriesFromFat = respObj.getInt("CaloriesFromFat");
+                    fd.Carbohydrates = respObj.getInt("Carbohydrates");
+                    fd.Cholesterol = respObj.getInt("Cholesterol");
+                    fd.DietaryFiber = respObj.getInt("DietaryFiber");
+                    fd.SaturatedFat = respObj.getInt("SaturatedFat");
+                    fd.Sodium = respObj.getInt("Sodium");
+                    fd.Sugars = respObj.getInt("Sugars");
+                    fd.Protein = respObj.getInt("Protein");
+                    fd.TotalFat = respObj.getInt("TotalFat");
+                    fd.TransFat = respObj.getInt("TransFat");
+                    fd.ServingSize = respObj.getInt("ServingSize");
+                    return fd;
+                }
             } else {
                 Log.d("SERVCOMM", "Bad response: " + connection.getResponseCode());
             }
         } catch (IOException | JSONException e) {
             Log.d("SERVCOMM", e.getMessage());
+        } finally {
+            throw new NoSuchFoodException();
         }
     }
 
