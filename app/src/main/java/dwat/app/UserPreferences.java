@@ -18,15 +18,17 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 
 public class UserPreferences {
+    private final String host = "dwat.us-2.evennode.com";
+
     public void RequestMenu(String manufacturer) {
         try {
-            HashMap<String, String> messageMap = new HashMap<String, String>();
-            messageMap.put("data", "menu");
-            messageMap.put("manf", manufacturer);
-            JSONObject reqObj = new JSONObject(messageMap);
+            JSONObject reqObj = new JSONObject();
+            reqObj.put("data", "menu");
+            reqObj.put("manf", manufacturer);
+
             String message = URLEncoder.encode(reqObj.toString(), "UTF-8");
 
-            URL url = new URL("http://uxkkad247118.xlaresix.koding.io:3000/");
+            URL url = new URL(host);
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
@@ -41,28 +43,21 @@ public class UserPreferences {
             } else {
                 Log.d("SERVCOMM", "Bad response: " + connection.getResponseCode());
             }
-        } catch (UnsupportedEncodingException e) {
-
-        } catch (ProtocolException e) {
-
-        } catch (IOException e) {
-
-        } catch (JSONException e) {
-
+        } catch (IOException | JSONException e) {
+            Log.d("SERVCOMM", e.getMessage());
         }
     }
 
     public void RequestFoodDescription(String manufacturer, String foodname) {
         try {
-            HashMap<String, String> messageMap = new HashMap<String, String>();
-            messageMap.put("data", "fooddesc");
-            messageMap.put("foodname", foodname);
-            messageMap.put("manf", manufacturer);
-            JSONObject reqObj = new JSONObject(messageMap);
+            JSONObject reqObj = new JSONObject();
+            reqObj.put("data", "fooddesc");
+            reqObj.put("foodname", foodname);
+            reqObj.put("manf", manufacturer);
 
             String message = URLEncoder.encode(reqObj.toString(), "UTF-8");
 
-            URL url = new URL("http://uxkkad247118.xlaresix.koding.io:3000/");
+            URL url = new URL(host);
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
@@ -77,14 +72,8 @@ public class UserPreferences {
             } else {
                 Log.d("SERVCOMM", "Bad response: " + connection.getResponseCode());
             }
-        } catch (UnsupportedEncodingException e) {
-
-        } catch (ProtocolException e) {
-
-        } catch (IOException e) {
-
-        } catch (JSONException e) {
-
+        } catch (IOException | JSONException e) {
+            Log.d("SERVCOMM", e.getMessage());
         }
     }
 
