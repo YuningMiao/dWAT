@@ -66,6 +66,9 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_suggest2);
 
+		UserPreferences up = new UserPreferences();
+		up.RequestMenu("McDonald's", this);
+
 		mGoogleApiClient = new GoogleApiClient
 			.Builder( this )
 			.enableAutoManage( this, 0, this )
@@ -135,8 +138,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		cameraButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-			Intent intent = new Intent(v.getContext(), Camera_Main.class);
-			startActivityForResult(intent, 0);
+				Intent intent = new Intent(v.getContext(), Camera_Main.class);
+				startActivityForResult(intent, 0);
 			}
 		});
 
@@ -144,19 +147,28 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		refreshButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-			if (mGoogleApiClient.isConnected()) {
-				if (ContextCompat.checkSelfPermission(Suggestion_Screen.this,
-						Manifest.permission.ACCESS_FINE_LOCATION)
-						!= PackageManager.PERMISSION_GRANTED) {
-					ActivityCompat.requestPermissions(Suggestion_Screen.this,
-							new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-							1000);
-				} else {
-					guessCurrentPlace();
+				if (mGoogleApiClient.isConnected()) {
+					if (ContextCompat.checkSelfPermission(Suggestion_Screen.this,
+							Manifest.permission.ACCESS_FINE_LOCATION)
+							!= PackageManager.PERMISSION_GRANTED) {
+						ActivityCompat.requestPermissions(Suggestion_Screen.this,
+								new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+								1000);
+					} else {
+						guessCurrentPlace();
+					}
 				}
 			}
-			}
 		});
+	}
+
+	public void updateLocValues(String[] newVals) {
+		int minLength = Math.min(locValues.size(), newVals.length);
+		for(int i=0;i<minLength;i++) {
+			locValues.set(i, newVals[i]);
+		}
+		//adapter2.notifyDataSetChanged();
+		Log.d("SERVCOMM", "locValues updated");
 	}
 
 	@Override
