@@ -17,7 +17,10 @@
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
         android:layout_marginBottom="100dp"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        android:layout_centerInParent="true"
+        android:maxWidth="450dp"
+        android:maxHeight="450dp"/>
 
     <!--android:nestedScrollingEnabled="true"-->
     <!--android:layout_height="250dp"-->

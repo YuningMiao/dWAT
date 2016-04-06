@@ -1,6 +1,8 @@
 package dwat.app;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -43,6 +45,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
     String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
 	ArrayList<String> locValues = new ArrayList<String>(Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5"));
 	ArrayAdapter<String> adapter, adapter2;
+	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
 
     private String getCurDate() {
@@ -91,8 +94,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 				startActivity(intent);
 			}
 		});
-
-		//final String curDate = new SimpleDateFormat("MM-dd-yyyy").format(new Date());
 
 		sl1 = (ListView) findViewById(R.id.suggestList1);
 		adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, histValues);
@@ -197,17 +198,62 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					return;
 				}
 				try {
-					PlaceLikelihood placeLikelihood = likelyPlaces.get(0);
-					String content = "";
-					if (placeLikelihood != null && placeLikelihood.getPlace() != null && !TextUtils.isEmpty(placeLikelihood.getPlace().getName()))
-						content = placeLikelihood.getPlace().getName() + "";
-					if (placeLikelihood != null)
-						content += " " + (int) (placeLikelihood.getLikelihood() * 100) + "%";
+					locs = new ArrayList<String>();
+//					ListView list = (ListView) findViewById(R.id.suggestList1);
+//					ArrayAdapter arrayAdapter = new ArrayAdapter<String>(Suggestion_Screen.this, R.layout.activity_suggest2, locs);
+//					list.setAdapter(arrayAdapter);
+					int index = 0;
+//					for(PlaceLikelihood placeLikelihood : likelyPlaces){
+//						String value;
+//						value = placeLikelihood.getPlace().getName().toString() + " ";
+//						value += placeLikelihood.getLikelihood() * 100;
+//						locs.add(value);
+//					}
+//
+//					for(int i = 5; i < locs.size(); i++){
+//						locs.remove(i);
+//					}
+					PlaceLikelihood placeLikelihood;
+					String value;
+					for(int i = 0; i < 5; i++){
+						placeLikelihood = likelyPlaces.get(i);
+						value = placeLikelihood.getPlace().getName().toString() + " ";
+						value += String.format("%.1f", placeLikelihood.getLikelihood() * 100);
+						locs.add(value);
+					}
 
-					locValues.add("Meal based on " + content);
-					adapter2.notifyDataSetChanged();
-					curLoc = content;
-					Toast.makeText(getApplicationContext(), content, Toast.LENGTH_LONG).show();
+//					locs.removeRange(5, locs.size());
+
+					CharSequence[] cs = locs.toArray(new CharSequence[locs.size()]);
+
+					AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
+					builder.setTitle("Select your location");
+					builder.setItems(cs, new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// do something with the selection
+							locValues.add("Meal based on " + locs.get(which));
+							adapter2.notifyDataSetChanged();
+							curLoc = locs.get(which);
+							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
+						}
+					});
+
+					AlertDialog alert = builder.create();
+					alert.show();
+
+
+//					PlaceLikelihood placeLikelihood = likelyPlaces.get(0);
+//					String content = "";
+//					if (placeLikelihood != null && placeLikelihood.getPlace() != null && !TextUtils.isEmpty(placeLikelihood.getPlace().getName()))
+//						content = placeLikelihood.getPlace().getName() + "";
+//					if (placeLikelihood != null)
+//						content += " " + (int) (placeLikelihood.getLikelihood() * 100) + "%";
+
+//					locValues.add("Meal based on " + content);
+//					adapter2.notifyDataSetChanged();
+//					curLoc = content;
+//					Toast.makeText(getApplicationContext(), content, Toast.LENGTH_LONG).show();
 
 				} catch (IllegalStateException e) {
 					Log.w("TAG", "Fail to get place or its coordinates");

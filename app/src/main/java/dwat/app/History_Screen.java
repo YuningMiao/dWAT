@@ -10,6 +10,7 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -56,6 +57,15 @@ public class History_Screen extends Activity {
         histAdpt = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, histValues);
 
         history.setAdapter(histAdpt);
+
+        ImageButton backBttn = (ImageButton) findViewById(R.id.homeButton);
+        backBttn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent backIntent = new Intent(History_Screen.this, Suggestion_Screen.class);
+                startActivity(backIntent);
+            }
+        });
     }
 
     public void updateFoodDescValues(UserPreferences.FoodDescription fd) {

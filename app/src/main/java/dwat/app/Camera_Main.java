@@ -3,6 +3,7 @@ package dwat.app;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,12 +14,20 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ibm.watson.developer_cloud.visual_recognition.v2.VisualRecognition;
+import com.ibm.watson.developer_cloud.visual_recognition.v2.model.VisualClassification;
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -32,6 +41,7 @@ public class Camera_Main extends FragmentActivity {
     String curDate;
     String curLoc;
     RelativeLayout screen;
+    VisualRecognition service;
 
     private String getCurDate() {
         Calendar c = Calendar.getInstance();
@@ -42,21 +52,10 @@ public class Camera_Main extends FragmentActivity {
     }
 
     private String getCurLocation() {
-//        LocationManager locManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        CurLocationListner locListner = new CurLocationListner();
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return TODO;
-//        }
-//        locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locListner);
-//        return curLoc;
-        return null;
+        if(curLoc == null || curLoc == "")
+            return null;
+        else
+            return curLoc;
     }
 
 
@@ -65,6 +64,9 @@ public class Camera_Main extends FragmentActivity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        curLoc = (String) getIntent().getSerializableExtra("location");
+
         picImg = (ImageView)findViewById(R.id.foodPic);
 
         screen = (RelativeLayout) findViewById(R.id.cameraScreen);
@@ -75,13 +77,18 @@ public class Camera_Main extends FragmentActivity {
             }
         });
 
+        service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
+        service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File f = new File(android.os.Environment.getExternalStorageDirectory(),"temp.jpg");
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
 
-        startActivityForResult(intent, 0);
+        startActivityForResult(intent, CAMERA_REQUEST);
 
-        Button backBttn = (Button) findViewById(R.id.backButton);
-        Button addBttn = (Button) findViewById(R.id.addButton);
+        ImageButton backBttn = (ImageButton) findViewById(R.id.backButton);
+        ImageButton addBttn = (ImageButton) findViewById(R.id.addButton);
+
         backBttn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -109,33 +116,55 @@ public class Camera_Main extends FragmentActivity {
 
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK){
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            picImg.setImageBitmap(photo);
+        TextView photoTags = (TextView) findViewById(R.id.photoTags);
 
-//
-//                if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK){
-                TextView photoTags = (TextView) findViewById(R.id.photoTags);
+        if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
+            File f = new File(Environment.getExternalStorageDirectory().toString());
+            for (File temp : f.listFiles()) {
+                if (temp.getName().equals("temp.jpg")) {
+                    f = temp;
+                    break;
+                }
+            }
+            try {
+                Bitmap photo;
+                BitmapFactory.Options photoOptions = new BitmapFactory.Options();
+                photo = BitmapFactory.decodeFile(f.getAbsolutePath(), photoOptions);
 
-//                Bitmap photo = (Bitmap) data.getExtras().get("data");
-//                picImg.setImageBitmap(photo);
+                // make photo portrait and set placeholder
+                Matrix matrix = new Matrix();
+                matrix.postRotate(90);
+                photo = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
+                picImg.setImageBitmap(photo);
 
-//
-//            VisualRecognition service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
-//            service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
-//
-//            File image = new File("src/test/resources/visual_recognition/car.png");
-//
-//            System.out.println("Classify using all the classifiers");
-//            VisualClassification result = service.classify(image);
-////            System.out.println(result);
-////
-//
-//            photoTags.setText((CharSequence) result);
+                Log.e("TAG", "Classify using all the classifiers");
+                VisualClassification result = service.classify(f);
+                System.out.println(result);
+                Log.e("TAG", String.valueOf(result) + " - hello");
+                photoTags.setText(photoTags.getText().toString() + "\n" + result + " - hello");
+
+                String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
+                f.delete();
+                OutputStream outFile = null;
+                File file = new File(path, String.valueOf(System.currentTimeMillis() + ".jpg"));
 
 
+                try {
+                    outFile = new FileOutputStream(file);
+                    photo.compress(Bitmap.CompressFormat.JPEG, 100, outFile);
+                    outFile.flush();
+                    outFile.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
     @Override
