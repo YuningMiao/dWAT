@@ -198,16 +198,16 @@ public class UserPreferences {
         }
     }
 
-    public static double valueFunction(MealEntry meal, String foodName, String location, Date date, int maxCount){
+    private static double valueFunction(MealEntry meal, String foodName, String location, Date date, int maxCount){
         double value = 0;
         if (foodName.length() > 0){
-            if(meal.foodItem.equalsIgnoreCase(foodName)){
+            if(meal.food.equalsIgnoreCase(foodName)){
                 value +=1;
             }
-            else if(meal.foodItem.toLowerCase().contains(foodName.toLowerCase())){
+            else if(meal.food.toLowerCase().contains(foodName.toLowerCase())){
                 value += 0.7;
             }
-            else if(foodName.toLowerCase().contains(meal.foodItem.toLowerCase())){
+            else if(foodName.toLowerCase().contains(meal.food.toLowerCase())){
                 value += 0.7;
             }
         }
@@ -227,7 +227,7 @@ public class UserPreferences {
         if(maxCount > 5)
             maxCount = maxCount/2;
         value += (double)meal.count/(double)maxCount;
-        System.out.println(meal.foodItem + " " + (meal.count/maxCount));
+        System.out.println(meal.food + " " + (meal.count/maxCount));
         return value;
     }
 
@@ -251,7 +251,7 @@ public class UserPreferences {
         }
         for (double val: values)
             System.out.print(val + " ");
-        return userHistory[maxInd].foodItem;
+        return userHistory[maxInd].food;
     }
 
 
