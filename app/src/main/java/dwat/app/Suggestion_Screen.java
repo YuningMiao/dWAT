@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -20,7 +19,6 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -30,21 +28,19 @@ import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 
 public class Suggestion_Screen extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks{
     private static final String TODO = "";
     String curDate;
     String curLoc;
-    ListView sl1, sl2;
+    ListView suggestList;
 	RelativeLayout screen;
     String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
 	ArrayList<String> locValues = new ArrayList<String>(Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5"));
-	ArrayAdapter<String> adapter, adapter2;
+	ArrayAdapter<String> adapter;
 	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
 
@@ -84,42 +80,24 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		guessCurrentPlace();
 
 		screen = (RelativeLayout) findViewById(R.id.suggestScreen);
-		screen.setOnTouchListener(new OnSwipeTouchListener(Suggestion_Screen.this){
-			public void onSwipeRight(){
+		screen.setOnTouchListener(new OnSwipeTouchListener(Suggestion_Screen.this) {
+			public void onSwipeRight() {
 				Intent intent = new Intent(Suggestion_Screen.this, History_Screen.class);
 				startActivity(intent);
 			}
-			public void onSwipeLeft(){
+
+			public void onSwipeLeft() {
 				Intent intent = new Intent(Suggestion_Screen.this, Camera_Main.class);
 				startActivity(intent);
 			}
 		});
 
-		sl1 = (ListView) findViewById(R.id.suggestList1);
-		adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, histValues);
 
-		sl1.setAdapter(adapter);
-		sl1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				History newMeal;
-				if (getCurLocation() == null) {
-					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
-				} else
-					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
-				Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+		suggestList = (ListView) findViewById(R.id.suggestList);
+		adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, locValues);
 
-				Intent intent = new Intent(Suggestion_Screen.this, History_Screen.class);
-				intent.putExtra("meal", (Serializable) newMeal);
-				startActivity(intent);
-			}
-		});
-
-		sl2 = (ListView) findViewById(R.id.suggestList2);
-		adapter2 = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, locValues);
-
-		sl2.setAdapter(adapter2);
-		sl2.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		suggestList.setAdapter(adapter);
+		suggestList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				History newMeal;
@@ -168,7 +146,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		for(int i=0;i<minLength;i++) {
 			locValues.set(i, newVals[i]);
 		}
-		//adapter2.notifyDataSetChanged();
+		//adapter.notifyDataSetChanged();
 		Log.d("SERVCOMM", "locValues updated");
 	}
 
@@ -199,20 +177,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 				}
 				try {
 					locs = new ArrayList<String>();
-//					ListView list = (ListView) findViewById(R.id.suggestList1);
-//					ArrayAdapter arrayAdapter = new ArrayAdapter<String>(Suggestion_Screen.this, R.layout.activity_suggest2, locs);
-//					list.setAdapter(arrayAdapter);
-					int index = 0;
-//					for(PlaceLikelihood placeLikelihood : likelyPlaces){
-//						String value;
-//						value = placeLikelihood.getPlace().getName().toString() + " ";
-//						value += placeLikelihood.getLikelihood() * 100;
-//						locs.add(value);
-//					}
-//
-//					for(int i = 5; i < locs.size(); i++){
-//						locs.remove(i);
-//					}
+
 					PlaceLikelihood placeLikelihood;
 					String value;
 					for(int i = 0; i < 5; i++){
@@ -222,8 +187,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 						locs.add(value);
 					}
 
-//					locs.removeRange(5, locs.size());
-
 					CharSequence[] cs = locs.toArray(new CharSequence[locs.size()]);
 
 					AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
@@ -231,9 +194,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					builder.setItems(cs, new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							// do something with the selection
 							locValues.add("Meal based on " + locs.get(which));
-							adapter2.notifyDataSetChanged();
+							adapter.notifyDataSetChanged();
 							curLoc = locs.get(which);
 							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
 						}
@@ -241,19 +203,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 					AlertDialog alert = builder.create();
 					alert.show();
-
-
-//					PlaceLikelihood placeLikelihood = likelyPlaces.get(0);
-//					String content = "";
-//					if (placeLikelihood != null && placeLikelihood.getPlace() != null && !TextUtils.isEmpty(placeLikelihood.getPlace().getName()))
-//						content = placeLikelihood.getPlace().getName() + "";
-//					if (placeLikelihood != null)
-//						content += " " + (int) (placeLikelihood.getLikelihood() * 100) + "%";
-
-//					locValues.add("Meal based on " + content);
-//					adapter2.notifyDataSetChanged();
-//					curLoc = content;
-//					Toast.makeText(getApplicationContext(), content, Toast.LENGTH_LONG).show();
 
 				} catch (IllegalStateException e) {
 					Log.w("TAG", "Fail to get place or its coordinates");

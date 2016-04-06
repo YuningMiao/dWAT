@@ -12,42 +12,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="History Suggestions"
-        android:id="@+id/suggestText1"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentStart="false"
-        android:layout_alignParentLeft="true" />
+        android:text="Suggestions"
+        android:id="@+id/suggestText"
+        />
 
     <ListView
-        android:id="@+id/suggestList1"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:layout_below="@+id/suggestText1" />
-
-    <TextView
+        android:id="@+id/suggestList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Location Suggestions"
-        android:id="@+id/suggestText2"
-        android:layout_below="@+id/suggestList1"
-        android:layout_alignStart="@+id/suggestText1"
-        android:layout_marginTop="25dp" />
-
-    <ListView
-        android:id="@+id/suggestList2"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:layout_below="@+id/suggestText2" />
+        android:layout_below="@+id/suggestText"
+        android:layout_marginBottom="70dp"/>
 
     <ImageButton
         android:layout_width="40dp"
@@ -56,8 +32,8 @@
         android:src="@drawable/location"
         android:background="@null"
         android:scaleType="centerCrop"
-        android:layout_alignEnd="@+id/suggestList2"
-        android:layout_alignTop="@+id/suggestText2"/>
+        android:layout_alignEnd="@+id/suggestList"
+        android:layout_alignTop="@+id/suggestText"/>
 
     <ImageButton
         android:layout_width="60dp"
@@ -66,13 +42,14 @@
         android:src="@drawable/camera"
         android:background="@null"
         android:scaleType="centerCrop"
-        android:layout_marginTop="30dp"
-        android:layout_below="@+id/suggestList2"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="10dp"/>
+        android:baselineAlignBottom="false"
+        android:layout_alignParentBottom="true"/>
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/popupLoc">
+        android:id="@+id/popupLoc"
+        android:layout_alignParentTop="true"
+        >
     </ListView>
 </RelativeLayout>
