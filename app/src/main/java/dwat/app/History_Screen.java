@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -14,10 +15,15 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 public class History_Screen extends Activity {
 //    Location latitude;
@@ -64,6 +70,14 @@ public class History_Screen extends Activity {
         histValues.set(2, "ServingSize: " + fd.ServingSize);
         histValues.set(3, "Calories: " + fd.Calories);
         histValues.set(4, "TotalFat: " + fd.TotalFat);
+        MealEntry me = new MealEntry(fd.FoodName, fd.FoodManf, new Date(), 1);
+        try {
+            new File("userhist.dat").createNewFile();
+            me.Serialize(new FileOutputStream("userhist.dat"));
+        } catch(IOException e) {
+            Log.d("SERVCOMM", e.getMessage());
+        }
+        Log.d("SERVCOMM", "MealEntry serialized");
         Log.d("SERVCOMM", "histValues about to be updated");
         histAdpt.notifyDataSetChanged();
         Log.d("SERVCOMM", "histValues updated");
