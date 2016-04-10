@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class History_Screen extends Activity {
 //        date = new SimpleDateFormat("yyyy-MM-dd H:mm:ss");
 //    }
     ListView history;
-    ArrayList<String> histValues = new ArrayList<String>(Arrays.asList("Meal 1", "Meal 2", "Meal 3", "Meal 4", "Meal 5"));
+    ArrayList<String> histValues = new ArrayList<String>(/*Arrays.asList("Meal 1", "Meal 2", "Meal 3", "Meal 4", "Meal 5")*/);
     ArrayAdapter<String> histAdpt;
     History hist;
     RelativeLayout screen;
@@ -44,9 +45,6 @@ public class History_Screen extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
 
-        UserPreferences up = new UserPreferences();
-        up.RequestFoodDescription("McDonald's", "Buffalo Ranch McChicken", this);
-
         screen = (RelativeLayout) findViewById(R.id.histScreen);
         screen.setOnTouchListener(new OnSwipeTouchListener(History_Screen.this) {
             public void onSwipeLeft() {
@@ -55,10 +53,14 @@ public class History_Screen extends Activity {
             }
         });
 
+        UserPreferences up = new UserPreferences();
+
         history = (ListView) findViewById(R.id.histList);
         hist = (History) getIntent().getSerializableExtra("meal");
-        if(hist != null && !hist.getHist().isEmpty() && hist.getHist().length() > 0)
-            histValues.add(hist.getHist());
+        if(hist != null && !hist.getHist().isEmpty() && hist.getHist().length() > 0) {
+            //histValues.add(hist.getHist());
+            up.RequestFoodDescription(hist.getLocName(), hist.getMealName(), this);
+        }
 
         histAdpt = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, histValues);
 
@@ -75,11 +77,35 @@ public class History_Screen extends Activity {
     }
 
     public void updateFoodDescValues(UserPreferences.FoodDescription fd) {
-        histValues.set(0, "FoodName: " + fd.FoodName);
-        histValues.set(1, "FoodManf: " + fd.FoodManf);
-        histValues.set(2, "ServingSize: " + fd.ServingSize);
-        histValues.set(3, "Calories: " + fd.Calories);
-        histValues.set(4, "TotalFat: " + fd.TotalFat);
+        for (Field field : fd.getClass().getDeclaredFields()) {
+            field.setAccessible(true); // You might want to set modifier to public first.
+            Object value = null;
+            try {
+                value = field.get(fd);
+            } catch (IllegalAccessException e) {
+                Log.d("SERVCOMM","Exception: " + e.getMessage());
+            }
+            if (value != null) {
+                switch(field.getName()) {
+                    case "Type":case "this$0":
+                        break;
+                    default:
+                        histValues.add(field.getName() + ": " + value);
+                        break;
+                }
+            }
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    histAdpt.notifyDataSetChanged();
+                } catch (Exception e) {
+                    Log.d("SERVCOMM", "Exception: " + e.getMessage());
+                }
+            }
+        });
+
         MealEntry me = new MealEntry(fd.FoodName, fd.FoodManf, new Date(), 1);
         try {
             new File("userhist.dat").createNewFile();
@@ -89,7 +115,6 @@ public class History_Screen extends Activity {
         }
         Log.d("SERVCOMM", "MealEntry serialized");
         Log.d("SERVCOMM", "histValues about to be updated");
-        histAdpt.notifyDataSetChanged();
         Log.d("SERVCOMM", "histValues updated");
     }
 

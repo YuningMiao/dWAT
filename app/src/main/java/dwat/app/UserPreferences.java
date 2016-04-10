@@ -24,6 +24,7 @@ public class UserPreferences {
     public class FoodDescription {
         public String FoodManf;
         public String FoodName;
+        public String Type;
         public int ServingSize;
         public int Calories;
         public int CaloriesFromFat;
@@ -42,7 +43,7 @@ public class UserPreferences {
                     obj.has("Calories") && obj.has("CaloriesFromFat") && obj.has("TotalFat") &&
                     obj.has("SaturatedFat") && obj.has("TransFat") && obj.has("Cholesterol") &&
                     obj.has("Sodium") && obj.has("Carbohydrates") && obj.has("DietaryFiber") &&
-                    obj.has("Sugars") && obj.has("Protein");
+                    obj.has("Sugars") && obj.has("Protein") && obj.has("Type");
         }
     }
     private class SendServerMenuQuery extends AsyncTask<Object, String, Object> {
@@ -81,7 +82,6 @@ public class UserPreferences {
                     String response = result.toString();
                     Log.d("SERVCOMM", "response: " + response);
                     JSONArray respArr = new JSONArray(response);
-                    Log.d("SERVCOMM", "Menu response: " + respArr.getString(0));
                     String[] menu = new String[respArr.length()];
                     for(int i=0;i<respArr.length();i++) {
                         menu[i] = respArr.getString(i);
@@ -145,6 +145,7 @@ public class UserPreferences {
                     if(fd.isValidFoodDescription(respObj)) {
                         fd.FoodManf = respObj.getString("FoodManf");
                         fd.FoodName = respObj.getString("FoodName");
+                        fd.Type = respObj.getString("Type");
                         fd.Calories = respObj.getInt("Calories");
                         fd.CaloriesFromFat = respObj.getInt("CaloriesFromFat");
                         fd.Carbohydrates = respObj.getInt("Carbohydrates");

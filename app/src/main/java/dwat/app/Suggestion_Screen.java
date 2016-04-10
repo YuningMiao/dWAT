@@ -38,9 +38,9 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
     String curLoc;
     ListView suggestList;
 	RelativeLayout screen;
-    String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
-	ArrayList<String> locValues = new ArrayList<String>(Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5"));
-	ArrayAdapter<String> adapter;
+    //String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
+	ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
+	ArrayAdapter<String> locationAdapter;
 	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
 
@@ -64,9 +64,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_suggest2);
-
-		UserPreferences up = new UserPreferences();
-		up.RequestMenu("McDonald's", this);
 
 		mGoogleApiClient = new GoogleApiClient
 			.Builder( this )
@@ -93,10 +90,9 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		});
 
 
+		locationAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, locValues);
 		suggestList = (ListView) findViewById(R.id.suggestList);
-		adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, locValues);
-
-		suggestList.setAdapter(adapter);
+		suggestList.setAdapter(locationAdapter);
 		suggestList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -141,13 +137,21 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		});
 	}
 
-	public void updateLocValues(String[] newVals) {
-		int minLength = Math.min(locValues.size(), newVals.length);
-		for(int i=0;i<minLength;i++) {
-			locValues.set(i, newVals[i]);
-		}
-		//adapter.notifyDataSetChanged();
-		Log.d("SERVCOMM", "locValues updated");
+	public void updateLocValues(final String[] newVals) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					locationAdapter.clear();
+					for (int i = 0; i < newVals.length; i++) {
+						locationAdapter.add(newVals[i]);
+					}
+				} catch (Exception e) {
+					Log.d("SERVCOMM", "Exception: " + e.getMessage());
+				}
+			}
+		});
+		Log.d("SERVCOMM", "locValues set: " + newVals.length + " items");
 	}
 
 	@Override
@@ -187,6 +191,11 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 						locs.add(value);
 					}
 
+					/*TODO REMOVE*/
+					locs.clear();
+					locs.add("McDonald's");
+					locs.add("Arby's");
+					locs.add("Chicken Express");
 					CharSequence[] cs = locs.toArray(new CharSequence[locs.size()]);
 
 					AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
@@ -194,9 +203,13 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					builder.setItems(cs, new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							locValues.add("Meal based on " + locs.get(which));
-							adapter.notifyDataSetChanged();
+							//locValues.add("Meal based on " + locs.get(which));
+							//locationAdapter.notifyDataSetChanged();
 							curLoc = locs.get(which);
+
+							UserPreferences up = new UserPreferences();
+							up.RequestMenu(curLoc, Suggestion_Screen.this);
+
 							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
 						}
 					});
