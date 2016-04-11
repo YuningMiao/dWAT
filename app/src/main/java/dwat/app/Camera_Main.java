@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Date;
@@ -156,11 +157,13 @@ public class Camera_Main extends FragmentActivity {
                 String result1 = result.toString();
                 Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");
                 Matcher matcher = pattern.matcher(result1);
+                ArrayList<String> results = new ArrayList<String>(20);
                 while (matcher.find()) {
                     System.out.println(matcher.group(1));
+                    results.add(matcher.group(1));
                 }
 
-                photoTags.setText(photoTags.getText().toString() + "\n" + matcher.group(1) + " - hello");
+                photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));
 
                 String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
                 f.delete();
