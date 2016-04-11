@@ -40,6 +40,7 @@ public class Camera_Main extends FragmentActivity {
     String curDate;
     String curLoc;
     RelativeLayout screen;
+    File f;
 
 
     private String getCurDate() {
@@ -122,7 +123,7 @@ public class Camera_Main extends FragmentActivity {
         TextView photoTags = (TextView) findViewById(R.id.photoTags);
 
         if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-            File f = new File(Environment.getExternalStorageDirectory().toString());
+            f = new File(Environment.getExternalStorageDirectory().toString());
             for (File temp : f.listFiles()) {
                 if (temp.getName().equals("temp.jpg")) {
                     f = temp;
@@ -160,27 +161,28 @@ public class Camera_Main extends FragmentActivity {
 
                 photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));*/
 
-                String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
-                //f.delete();
-                OutputStream outFile = null;
-                File file = new File(path, String.valueOf(System.currentTimeMillis() + ".jpg"));
+//                String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
 
-
-                try {
-                    outFile = new FileOutputStream(file);
-                    photo.compress(Bitmap.CompressFormat.JPEG, 100, outFile);
-                    outFile.flush();
-                    outFile.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+//                OutputStream outFile = null;
+//                File file = new File(path, String.valueOf(System.currentTimeMillis() + ".jpg"));
+//
+//
+//                try {
+//                    outFile = new FileOutputStream(file);
+//                    photo.compress(Bitmap.CompressFormat.JPEG, 100, outFile);
+//                    outFile.flush();
+//                    outFile.close();
+//                } catch (FileNotFoundException e) {
+//                    e.printStackTrace();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
         }
     }
 
@@ -229,6 +231,7 @@ public class Camera_Main extends FragmentActivity {
         protected void onPostExecute(Integer result){
             pd.dismiss();
             photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));
+            f.delete();
         }
 
 
