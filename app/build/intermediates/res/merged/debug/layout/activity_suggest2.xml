@@ -1,72 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+                android:orientation="vertical" android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:paddingBottom="@dimen/activity_vertical_margin"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
                 android:id="@+id/suggestScreen">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="History Suggestions"
-        android:id="@+id/suggestText1"
-        android:layout_marginLeft="25dp"
-        android:layout_marginRight="25dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="25dp"
-        android:layout_alignParentStart="false"
-        android:layout_alignParentLeft="true" />
+        android:text="Suggestions"
+        android:id="@+id/suggestText"
+        />
 
     <ListView
-        android:id="@+id/suggestList1"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_marginLeft="25dp"
-        android:layout_marginRight="25dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:layout_below="@+id/suggestText1" />
-
-    <TextView
+        android:id="@+id/suggestList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Location Suggestions"
-        android:id="@+id/suggestText2"
-        android:layout_below="@+id/suggestList1"
-        android:layout_alignStart="@+id/suggestText1"
-        android:layout_marginTop="25dp" />
-
-    <ListView
-        android:id="@+id/suggestList2"
-        android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:layout_marginLeft="25dp"
-        android:layout_marginRight="25dp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:layout_below="@+id/suggestText2" />
+        android:layout_below="@+id/suggestText"
+        android:layout_marginBottom="70dp"/>
 
     <ImageButton
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:id="@+id/refreshButton"
         android:src="@drawable/location"
         android:background="@null"
         android:scaleType="centerCrop"
-        android:layout_alignEnd="@+id/suggestList1"
-        android:layout_alignTop="@+id/suggestText2"/>
+        android:layout_alignEnd="@+id/suggestList"
+        android:layout_alignTop="@+id/suggestText"/>
 
     <ImageButton
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:id="@+id/cameraButton"
         android:src="@drawable/camera"
         android:background="@null"
         android:scaleType="centerCrop"
-        android:layout_marginTop="20dp"
-        android:layout_below="@+id/suggestList2"
-        android:layout_centerHorizontal="true"/>
-
+        android:layout_centerHorizontal="true"
+        android:baselineAlignBottom="false"
+        android:layout_alignParentBottom="true"/>
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/popupLoc"
+        android:layout_alignParentTop="true"
+        >
+    </ListView>
 </RelativeLayout>

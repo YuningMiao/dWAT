@@ -6,8 +6,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -33,6 +35,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Camera_Main extends FragmentActivity {
 
@@ -65,17 +69,21 @@ public class Camera_Main extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
         curLoc = (String) getIntent().getSerializableExtra("location");
 
         picImg = (ImageView)findViewById(R.id.foodPic);
 
         screen = (RelativeLayout) findViewById(R.id.cameraScreen);
-        screen.setOnTouchListener(new OnSwipeTouchListener(Camera_Main.this){
-            public void onSwipeRight(){
+        screen.setOnTouchListener(new OnSwipeTouchListener(Camera_Main.this) {
+            public void onSwipeRight() {
                 Intent intent = new Intent(Camera_Main.this, Suggestion_Screen.class);
                 startActivity(intent);
             }
         });
+
 
         service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
         service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
@@ -131,17 +139,28 @@ public class Camera_Main extends FragmentActivity {
                 BitmapFactory.Options photoOptions = new BitmapFactory.Options();
                 photo = BitmapFactory.decodeFile(f.getAbsolutePath(), photoOptions);
 
+                File image = new File(f.getAbsolutePath());
                 // make photo portrait and set placeholder
                 Matrix matrix = new Matrix();
                 matrix.postRotate(90);
                 photo = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
                 picImg.setImageBitmap(photo);
 
+
                 Log.e("TAG", "Classify using all the classifiers");
-                VisualClassification result = service.classify(f);
+                VisualClassification result = service.classify(image);
+
+
                 System.out.println(result);
                 Log.e("TAG", String.valueOf(result) + " - hello");
-                photoTags.setText(photoTags.getText().toString() + "\n" + result + " - hello");
+                String result1 = result.toString();
+                Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");
+                Matcher matcher = pattern.matcher(result1);
+                while (matcher.find()) {
+                    System.out.println(matcher.group(1));
+                }
+
+                photoTags.setText(photoTags.getText().toString() + "\n" + matcher.group(1) + " - hello");
 
                 String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
                 f.delete();
@@ -166,7 +185,19 @@ public class Camera_Main extends FragmentActivity {
             }
         }
     }
+/*private class visual extends AsyncTask<Void, Void ,Void> {
+    protected VisualClassification doInBackground(){
+        service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
+        service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
+        File image = new File(Environment.getExternalStorageDirectory().toString())+ "temp.jpg");
+        //StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy().Builder().permitAll().build();
+        //StrictMode.setThreadPolicy(policy);
+        VisualClassification result = service.classify(image);
+        return result;
+    }
 
+
+}*/
     @Override
     public void onBackPressed() {
     }
