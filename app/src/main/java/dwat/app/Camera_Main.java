@@ -1,21 +1,19 @@
 package dwat.app;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -30,12 +28,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Locale;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +40,7 @@ public class Camera_Main extends FragmentActivity {
     String curDate;
     String curLoc;
     RelativeLayout screen;
-    VisualRecognition service;
+
 
     private String getCurDate() {
         Calendar c = Calendar.getInstance();
@@ -70,8 +64,8 @@ public class Camera_Main extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
+        /*StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);*/
 
         curLoc = (String) getIntent().getSerializableExtra("location");
 
@@ -86,8 +80,8 @@ public class Camera_Main extends FragmentActivity {
         });
 
 
-        service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
-        service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
+        /*service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
+        service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");*/
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File f = new File(android.os.Environment.getExternalStorageDirectory(),"temp.jpg");
@@ -149,7 +143,8 @@ public class Camera_Main extends FragmentActivity {
 
 
                 Log.e("TAG", "Classify using all the classifiers");
-                VisualClassification result = service.classify(image);
+                new visual().execute();
+                /*VisualClassification result = service.classify(image);
 
 
                 System.out.println(result);
@@ -163,10 +158,10 @@ public class Camera_Main extends FragmentActivity {
                     results.add(matcher.group(1));
                 }
 
-                photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));
+                photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));*/
 
                 String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
-                f.delete();
+                //f.delete();
                 OutputStream outFile = null;
                 File file = new File(path, String.valueOf(System.currentTimeMillis() + ".jpg"));
 
@@ -188,20 +183,56 @@ public class Camera_Main extends FragmentActivity {
             }
         }
     }
-/*private class visual extends AsyncTask<Void, Void ,Void> {
-    protected VisualClassification doInBackground(){
-        service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
-        service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
-        File image = new File(Environment.getExternalStorageDirectory().toString())+ "temp.jpg");
-        //StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy().Builder().permitAll().build();
-        //StrictMode.setThreadPolicy(policy);
-        VisualClassification result = service.classify(image);
-        return result;
-    }
 
-
-}*/
     @Override
     public void onBackPressed() {
     }
+
+    public class visual extends AsyncTask<Void, Void, Integer> {
+        TextView photoTags = (TextView) findViewById(R.id.photoTags);
+        VisualRecognition service;
+        VisualClassification result;
+        File image;
+        ArrayList<String> results;
+        ProgressDialog pd;
+
+        protected Integer doInBackground(Void... params){
+            service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
+            service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
+            //image = new File(Environment.getExternalStorageDirectory().toString() + "temp.jpg");;
+            //image = params[0].getAbsoluteFile();
+
+            File image = new File(Environment.getExternalStorageDirectory().toString());
+            for (File temp : image.listFiles()) {
+                if (temp.getName().equals("temp.jpg")) {
+                    image = temp;
+                    break;
+                }
+            }
+            result = service.classify(image);
+            String result1 = result.toString();
+            Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");
+            Matcher matcher = pattern.matcher(result1);
+            results = new ArrayList<String>(20);
+            while (matcher.find()) {
+                System.out.println(matcher.group(1));
+                results.add(matcher.group(1));
+            }
+            return 1;
+        }
+
+        protected void onPreExecute(){
+            //photoTags.setText("Analyzing");
+            pd = ProgressDialog.show(Camera_Main.this, "Analyzing", "processing image");
+        }
+
+        protected void onPostExecute(Integer result){
+            pd.dismiss();
+            photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));
+        }
+
+
+    }
+
 }
+
