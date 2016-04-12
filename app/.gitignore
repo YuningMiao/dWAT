@@ -1,1 +1,8 @@
 *.log
+.gradle/
+.idea/
+build/
+app/build/
+*.iml
+/app/build/intermediates
+app/build/outputs

@@ -238,4 +238,3 @@ public class Camera_Main extends FragmentActivity {
     }
 
 }
-
