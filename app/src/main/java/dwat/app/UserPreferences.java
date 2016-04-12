@@ -199,9 +199,9 @@ public class UserPreferences {
         }
     }
 
-    private static double valueFunction(MealEntry meal, String foodName, String location, Date date, int maxCount){
+    private static double valueFunction(MealEntry meal, /*String foodName,*/ String location, Date date, int maxCount){
         double value = 0;
-        if (foodName.length() > 0){
+        /*if (foodName != null && foodName.length() > 0){
             if(meal.food.equalsIgnoreCase(foodName)){
                 value +=1;
             }
@@ -211,8 +211,8 @@ public class UserPreferences {
             else if(foodName.toLowerCase().contains(meal.food.toLowerCase())){
                 value += 0.7;
             }
-        }
-        if (location.length() > 0){
+        }*/
+        if (location != null && location.length() > 0){
             if(location.equalsIgnoreCase(meal.location)){
                 value +=1;
             }
@@ -228,11 +228,11 @@ public class UserPreferences {
         if(maxCount > 5)
             maxCount = maxCount/2;
         value += (double)meal.count/(double)maxCount;
-        System.out.println(meal.food + " " + (meal.count/maxCount));
+        //System.out.println(meal.food + " " + (meal.count/maxCount));
         return value;
     }
 
-    public static String userPreference(MealEntry []userHistory, String foodName, String location, Date date){
+    public static MealEntry[] userPreference(MealEntry []userHistory, String location, Date date){
         int maxCount = 4;
         for(MealEntry meal : userHistory){
             if(meal.count > maxCount){
@@ -240,19 +240,51 @@ public class UserPreferences {
             }
         }
         System.out.println("MaxCount: " + maxCount);
-        double[] values = new double[userHistory.length];
+        //double[] values = new double[userHistory.length];
         double maxVal = -1;
         int maxInd = -1;
         for(int i = 0; i < userHistory.length; i++){
-            values[i] = valueFunction(userHistory[i],foodName, location, date, maxCount);
-            if(values[i] > maxVal){
+            userHistory[i].value = valueFunction(userHistory[i], location, date, maxCount);
+            System.out.print(userHistory[i].value + " ");
+            /*if(values[i] > maxVal){
                 maxVal = values[i];
                 maxInd = i;
+            }*/
+        }
+        /*for (double val: values)
+            System.out.print(val + " ");*/
+        //return userHistory[maxInd].food;
+        quickSort(userHistory, 0, userHistory.length - 1);
+        return userHistory;
+    }
+
+    private static void quickSort(MealEntry[] mes, int lowerIndex, int higherIndex) {
+        int i = lowerIndex;
+        int j = higherIndex;
+        // calculate pivot number, I am taking pivot as middle index number
+        double pivot = mes[lowerIndex+(higherIndex-lowerIndex)/2].value;
+        // Divide into two arrays
+        while (i <= j) {
+            while (mes[i].value < pivot) {
+                i++;
+            }
+            while (mes[j].value > pivot) {
+                j--;
+            }
+            if (i <= j) {
+                MealEntry tmp = mes[j];
+                mes[j] = mes[i];
+                mes[i] = tmp;
+                //move index to next position on both sides
+                i++;
+                j--;
             }
         }
-        for (double val: values)
-            System.out.print(val + " ");
-        return userHistory[maxInd].food;
+        // call quickSort() method recursively
+        if (lowerIndex < j)
+            quickSort(mes, lowerIndex, j);
+        if (i < higherIndex)
+            quickSort(mes, i, higherIndex);
     }
 
 

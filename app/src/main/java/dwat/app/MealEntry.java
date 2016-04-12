@@ -2,58 +2,107 @@ package dwat.app;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class MealEntry {
-    String food;
+    ArrayList<String> foods;
+    ArrayList<String> modifiers; //size modifiers
     String location;
     Date date;
     int count;
-    
-    MealEntry(String food, String location, Date date, int count){
-        this.food = food;
+    double value;
+
+    MealEntry(String location, Date date) {
         this.location = location;
         this.date = date;
-        this.count = count;
     }
 
-    public void Serialize(FileOutputStream fos) {
+    MealEntry() {
+        this.foods = new ArrayList<>();
+        this.modifiers = new ArrayList<>();
+    }
+
+    public void add(String food, String modifier) {
+        foods.add(food);
+        modifiers.add(modifier);
+    }
+
+    public String getFoodName(int i) {
+        return modifiers.get(i) + " " + foods.get(i);
+    }
+
+    public void Serialize(FileWriter fw) {
         try {
-            for (char c : food.toCharArray()) {
-                fos.write(c);
+            fw.write(foods.size());
+            for(String s : foods) {
+                fw.write(s);
+                fw.write('\r');
             }
-            fos.write('\r');
-            for(char c : location.toCharArray()) {
-                fos.write(c);
+            fw.write(modifiers.size());
+            for(String s : modifiers) {
+                fw.write(s);
+                fw.write('\r');
             }
-            fos.write('\r');
-            long dateL = date.getTime();
-            fos.write((int)dateL);
-            fos.write((int)(dateL >> 8));
-            fos.write(count);
+            fw.write((char)(count&0xff));
+            fw.write((char)((count>>8)&0xff));
+            fw.write((char)((count>>16)&0xff));
+            fw.write((char)((count>>24)&0xff));
+            fw.write(location);
+            fw.write('\r');
+            char[] c = new char[8];
+            long l = date.getTime();
+            for(int i=0;i<8;i++) {
+                c[i] = (char)((l >> (i*8))&(0xff));
+            }
+            fw.write(c);
         } catch (IOException e) {
 
         }
     }
 
-    public static MealEntry Deserialize(FileInputStream fis) {
+    public static MealEntry Deserialize(FileReader fr) {
+        MealEntry me = new MealEntry();
         try {
             int b;
-            String food = "", location = "";
-            while ((b = fis.read()) != -1) {
-                food += (char)b;
-                if(b == '\r') break;
+            String tmp = "";
+            int len = fr.read();
+            while ((b = fr.read()) != -1) {
+                tmp += (char)b;
+                if(b == '\r') {
+                    me.foods.add(tmp);
+                    tmp = "";
+                    if(me.foods.size() >= len) break;
+                }
             }
-            while ((b = fis.read()) != -1) {
-                location += (char)b;
-                if(b == '\r') break;
+            len = fr.read();
+            while ((b = fr.read()) != -1) {
+                tmp += (char)b;
+                if(b == '\r') {
+                    me.modifiers.add(tmp);
+                    tmp = "";
+                    if(me.foods.size() >= len) break;
+                }
             }
-            long dateF = fis.read();
-            long dateL = fis.read();
-            Date date = new Date(dateF << 8 | dateL);
-            int count = fis.read();
-            return new MealEntry(food, location, date, count);
+            me.count = 0;
+            for(int i=0;i<4;i++) {
+                me.count |= (fr.read() << (i*8));
+            }
+            while ((b = fr.read()) != -1) {
+                me.location += (char)b;
+                if(b == '\r') {
+                    break;
+                }
+            }
+            long l = 0L;
+            for(int i=0;i<8;i++) {
+                l |= (fr.read() << (i*8));
+            }
+            me.date = new Date(l);
+            return me;
         } catch (IOException e) {
 
         } finally {
