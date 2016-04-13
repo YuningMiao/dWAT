@@ -97,6 +97,11 @@ public class UserPreferences {
                             for(int j=0;j<arr.length();j++) {
                                 menu[i].Modifiers[j] = arr.getString(j);
                             }
+                            arr = obj.getJSONArray("BadModifiers");
+                            menu[i].BadModifiers = new String[arr.length()];
+                            for(int j=0;j<arr.length();j++) {
+                                menu[i].BadModifiers[j] = arr.getString(j);
+                            }
                         }
                     }
                     ss.updateLocValues(menu);
@@ -165,6 +170,11 @@ public class UserPreferences {
                             fd.Modifiers = new String[arr.length()];
                             for(int i=0;i<arr.length();i++) {
                                 fd.Modifiers[i] = arr.getString(i);
+                            }
+                            arr = respObj.getJSONArray("Modifiers");
+                            fd.BadModifiers = new String[arr.length()];
+                            for(int i=0;i<arr.length();i++) {
+                                fd.BadModifiers[i] = arr.getString(i);
                             }
                         }
                         fd.Calories = respObj.getInt("Calories");
@@ -266,7 +276,7 @@ public class UserPreferences {
         //int maxInd = -1;
         for(int i = 0; i < userHistory.length; i++){
             userHistory[i].value = valueFunction(userHistory[i], location, date, maxCount);
-            Log.d("UPREF", userHistory[i].getFoodName() + ": " + userHistory[i].value);
+            //Log.d("UPREF", userHistory[i].getFoodName() + ": " + userHistory[i].value);
             /*if(values[i] > maxVal){
                 maxVal = values[i];
                 maxInd = i;

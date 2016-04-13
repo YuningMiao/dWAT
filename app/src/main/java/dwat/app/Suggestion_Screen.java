@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -27,10 +28,14 @@ import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 
 public class Suggestion_Screen extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks{
     private static final String TODO = "";
@@ -38,6 +43,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
     String curLoc;
     ListView suggestList;
 	RelativeLayout screen;
+	ArrayList<MealEntry> userHistory = new ArrayList<>();
+	MealEntry[] mealEntries;
     //String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
 	ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
 	ArrayAdapter<String> locationAdapter;
@@ -135,28 +142,39 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 				}
 			}
 		});
+
+		new ReadMealEntries().execute(); //read old MealEntry items from userhist.dat
 	}
 
 	public void updateLocValues(final UserPreferences.FoodDescription[] newVals) {
+		final MealEntry m = new MealEntry (curLoc, new Date());
+		for (int i = 0; i < newVals.length; i++) {
+			String foodname = newVals[i].FoodName;
+			if(newVals[i].HasModifiers) {
+				for (String mod : newVals[i].Modifiers) {
+					foodname = foodname.replace(mod, "");
+				}
+			}
+			if(!m.foods.contains(foodname)) {
+				m.foods.add(foodname);
+			}
+			if (newVals[i].HasModifiers){
+				//add its modifier to the existing item
+				m.modifiers.add(newVals[i].Modifiers);
+				m.badmodifiers.add(newVals[i].BadModifiers);
+			} else {
+				m.modifiers.add(new String[0]);
+				m.badmodifiers.add(new String[0]);
+			}
+		}
+
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					locationAdapter.clear();
-					ArrayList<String> foodNames = new ArrayList<>();
-					for (int i = 0; i < newVals.length; i++) {
-						String foodname = newVals[i].FoodName;
-						if(newVals[i].HasModifiers) {
-							for (String mod : newVals[i].Modifiers) {
-								foodname = foodname.replace(mod, "");
-							}
-						}
-						if(!foodNames.contains(foodname)) {
-							foodNames.add(foodname);
-							locationAdapter.add(foodname);
-						} else {
-							//add its modifier to the existing item
-						}
+					for(String s : m.foods) {
+						locationAdapter.add(s);
 					}
 					locationAdapter.notifyDataSetChanged();
 				} catch (Exception e) {
@@ -271,6 +289,43 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					guessCurrentPlace();
 				}
 				break;
+		}
+	}
+
+	public class ReadMealEntries extends AsyncTask<Object, String, Object> {
+		protected Object doInBackground(Object... o) {
+			int count = 0;
+			FileReader fr = null;
+			try {
+				File f = new File(getExternalFilesDir(null), "userhist.dat");
+				f.delete();
+				f.createNewFile();
+				Log.d("UPREF", f.getAbsolutePath());
+				fr = new FileReader(f);
+				count = fr.read();
+				Log.d("UPREF", "Count=" + count);
+				if(count > 0) {
+					mealEntries = new MealEntry[count];
+					for(int i=0;i<Math.min(count,1000);i++) {
+						mealEntries[i] = MealEntry.Deserialize(fr);
+						Log.d("UPREF", mealEntries[i].toString());
+					}
+				} else {
+					mealEntries = new MealEntry[0];
+				}
+			} catch(IOException e) {
+				Log.d("UPREF", e.toString());
+			} catch(Exception e) {
+				Log.d("UPREF", e.toString());
+			} finally {
+				getIntent().putExtra("mealEntries", mealEntries);
+				try {
+					fr.close();
+				} catch (IOException e) {}
+			}
+			Log.d("UPREF", "MealEntries deserialized: " + count + " objects read");
+
+			return null;
 		}
 	}
 }

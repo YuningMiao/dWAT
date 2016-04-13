@@ -3,6 +3,7 @@ package dwat.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -17,8 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.Timestamp;
@@ -77,17 +77,23 @@ public class History_Screen extends Activity {
     }
 
     public void updateFoodDescValues(UserPreferences.FoodDescription fd) {
+        if(fd == null) return;
+
         for (Field field : fd.getClass().getDeclaredFields()) {
             field.setAccessible(true); // You might want to set modifier to public first.
             Object value = null;
             try {
                 value = field.get(fd);
             } catch (IllegalAccessException e) {
-                Log.d("SERVCOMM","Exception: " + e.getMessage());
+                Log.d("SERVCOMM", "Exception: " + e.getMessage());
             }
             if (value != null) {
-                switch(field.getName()) {
-                    case "Type":case "this$0":case"HasModifiers":case"Modifiers":case"BadModifiers":
+                switch (field.getName()) {
+                    case "Type":
+                    case "this$0":
+                    case "HasModifiers":
+                    case "Modifiers":
+                    case "BadModifiers":
                         break;
                     default:
                         histValues.add(field.getName() + ": " + value);
@@ -106,20 +112,51 @@ public class History_Screen extends Activity {
             }
         });
 
-        /*MealEntry me = new MealEntry(fd.FoodName, fd.FoodManf, new Date(), 1);
-        try {
-            new File("userhist.dat").createNewFile();
-            me.Serialize(new FileOutputStream("userhist.dat"));
-        } catch(IOException e) {
-            Log.d("SERVCOMM", e.getMessage());
-        }
-        Log.d("SERVCOMM", "MealEntry serialized");
-        Log.d("SERVCOMM", "histValues about to be updated");
-        Log.d("SERVCOMM", "histValues updated");*/
+        MealEntry m = new MealEntry("Current Location Here", new Date(), fd);
+
+        new WriteMealEntries().execute((Object) (m));
     }
 
     @Override
     public void onBackPressed() {
+    }
+
+    public class WriteMealEntries extends AsyncTask<Object, String, Object> {
+        protected Object doInBackground(Object... o) {
+            int count = o.length;
+            if(count > 0 && o[0] != null && o[0] instanceof MealEntry) {
+                FileWriter fw = null;
+                MealEntry[] mealEntries = (MealEntry[]) getIntent().getSerializableExtra("mealEntries");
+                MealEntry m = (MealEntry) o[0];
+                if(mealEntries == null) { Log.d("UPREF", "Meal Entries null in WriteMealEntries"); }
+                int newCount = mealEntries == null ? 1 : mealEntries.length + 1;
+                try {
+                    File f = new File(getExternalFilesDir(null), "userhist.dat");
+                    f.createNewFile();
+                    Log.d("UPREF", f.getAbsolutePath());
+                    fw = new FileWriter(f, false);
+                    fw.write(newCount);
+                    if(mealEntries != null) {
+                        for(MealEntry me : mealEntries) {
+                            me.Serialize(fw);
+                        }
+                    }
+                    m.Serialize(fw);
+                    fw.flush();
+                    fw.close();
+                } catch(IOException e) {
+                    Log.d("UPREF", e.toString());
+                } /*catch(Exception e) {
+                    Log.d("UPREF", e.toString());
+                } */finally {
+                    try {
+                        fw.close();
+                    } catch (IOException e) {}
+                }
+                Log.d("UPREF", "MealEntry serialized " + newCount + " objects");
+            }
+            return null;
+        }
     }
 
 }
