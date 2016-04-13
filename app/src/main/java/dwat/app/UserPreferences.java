@@ -25,6 +25,9 @@ public class UserPreferences {
         public String FoodManf;
         public String FoodName;
         public String Type;
+        public boolean HasModifiers;
+        public String[] Modifiers;
+        public String[] BadModifiers;
         public int ServingSize;
         public int Calories;
         public int CaloriesFromFat;
@@ -43,7 +46,7 @@ public class UserPreferences {
                     obj.has("Calories") && obj.has("CaloriesFromFat") && obj.has("TotalFat") &&
                     obj.has("SaturatedFat") && obj.has("TransFat") && obj.has("Cholesterol") &&
                     obj.has("Sodium") && obj.has("Carbohydrates") && obj.has("DietaryFiber") &&
-                    obj.has("Sugars") && obj.has("Protein") && obj.has("Type");
+                    obj.has("Sugars") && obj.has("Protein") && obj.has("Type") && obj.has("HasModifiers");
         }
     }
     private class SendServerMenuQuery extends AsyncTask<Object, String, Object> {
@@ -82,9 +85,19 @@ public class UserPreferences {
                     String response = result.toString();
                     Log.d("SERVCOMM", "response: " + response);
                     JSONArray respArr = new JSONArray(response);
-                    String[] menu = new String[respArr.length()];
+                    FoodDescription[] menu = new FoodDescription[respArr.length()];
                     for(int i=0;i<respArr.length();i++) {
-                        menu[i] = respArr.getString(i);
+                        JSONObject obj = respArr.getJSONObject(i);
+                        menu[i] = new FoodDescription();
+                        menu[i].FoodName = obj.getString("FoodName");
+                        menu[i].HasModifiers = obj.getBoolean("HasModifiers");
+                        if(menu[i].HasModifiers && obj.has("Modifiers")) {
+                            JSONArray arr = obj.getJSONArray("Modifiers");
+                            menu[i].Modifiers = new String[arr.length()];
+                            for(int j=0;j<arr.length();j++) {
+                                menu[i].Modifiers[j] = arr.getString(j);
+                            }
+                        }
                     }
                     ss.updateLocValues(menu);
                     return menu;
@@ -146,6 +159,14 @@ public class UserPreferences {
                         fd.FoodManf = respObj.getString("FoodManf");
                         fd.FoodName = respObj.getString("FoodName");
                         fd.Type = respObj.getString("Type");
+                        fd.HasModifiers = respObj.getBoolean("HasModifiers");
+                        if(fd.HasModifiers && respObj.has("Modifiers")) {
+                            JSONArray arr = respObj.getJSONArray("Modifiers");
+                            fd.Modifiers = new String[arr.length()];
+                            for(int i=0;i<arr.length();i++) {
+                                fd.Modifiers[i] = arr.getString(i);
+                            }
+                        }
                         fd.Calories = respObj.getInt("Calories");
                         fd.CaloriesFromFat = respObj.getInt("CaloriesFromFat");
                         fd.Carbohydrates = respObj.getInt("Carbohydrates");
@@ -241,11 +262,11 @@ public class UserPreferences {
         }
         System.out.println("MaxCount: " + maxCount);
         //double[] values = new double[userHistory.length];
-        double maxVal = -1;
-        int maxInd = -1;
+        //double maxVal = -1;
+        //int maxInd = -1;
         for(int i = 0; i < userHistory.length; i++){
             userHistory[i].value = valueFunction(userHistory[i], location, date, maxCount);
-            System.out.print(userHistory[i].value + " ");
+            Log.d("UPREF", userHistory[i].getFoodName() + ": " + userHistory[i].value);
             /*if(values[i] > maxVal){
                 maxVal = values[i];
                 maxInd = i;
@@ -254,16 +275,17 @@ public class UserPreferences {
         /*for (double val: values)
             System.out.print(val + " ");*/
         //return userHistory[maxInd].food;
+        long start = System.currentTimeMillis();
         quickSort(userHistory, 0, userHistory.length - 1);
+        long end = System.currentTimeMillis();
+        Log.d("UPREF", "User Pref quicksort took " + (end-start) + " msec");
         return userHistory;
     }
 
     private static void quickSort(MealEntry[] mes, int lowerIndex, int higherIndex) {
         int i = lowerIndex;
         int j = higherIndex;
-        // calculate pivot number, I am taking pivot as middle index number
         double pivot = mes[lowerIndex+(higherIndex-lowerIndex)/2].value;
-        // Divide into two arrays
         while (i <= j) {
             while (mes[i].value < pivot) {
                 i++;
@@ -275,12 +297,10 @@ public class UserPreferences {
                 MealEntry tmp = mes[j];
                 mes[j] = mes[i];
                 mes[i] = tmp;
-                //move index to next position on both sides
                 i++;
                 j--;
             }
         }
-        // call quickSort() method recursively
         if (lowerIndex < j)
             quickSort(mes, lowerIndex, j);
         if (i < higherIndex)

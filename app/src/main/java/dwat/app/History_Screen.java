@@ -87,7 +87,7 @@ public class History_Screen extends Activity {
             }
             if (value != null) {
                 switch(field.getName()) {
-                    case "Type":case "this$0":
+                    case "Type":case "this$0":case"HasModifiers":case"Modifiers":case"BadModifiers":
                         break;
                     default:
                         histValues.add(field.getName() + ": " + value);
@@ -106,7 +106,7 @@ public class History_Screen extends Activity {
             }
         });
 
-        MealEntry me = new MealEntry(fd.FoodName, fd.FoodManf, new Date(), 1);
+        /*MealEntry me = new MealEntry(fd.FoodName, fd.FoodManf, new Date(), 1);
         try {
             new File("userhist.dat").createNewFile();
             me.Serialize(new FileOutputStream("userhist.dat"));
@@ -115,7 +115,7 @@ public class History_Screen extends Activity {
         }
         Log.d("SERVCOMM", "MealEntry serialized");
         Log.d("SERVCOMM", "histValues about to be updated");
-        Log.d("SERVCOMM", "histValues updated");
+        Log.d("SERVCOMM", "histValues updated");*/
     }
 
     @Override

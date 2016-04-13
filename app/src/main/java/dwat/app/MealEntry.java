@@ -31,6 +31,14 @@ public class MealEntry {
         modifiers.add(modifier);
     }
 
+    public String getFoodName() {
+        StringBuffer sb = new StringBuffer();
+        for(int i=0;i<foods.size();i++) {
+            sb.append(getFoodName(i));
+        }
+        return sb.toString();
+    }
+
     public String getFoodName(int i) {
         return modifiers.get(i) + " " + foods.get(i);
     }

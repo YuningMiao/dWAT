@@ -137,17 +137,30 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		});
 	}
 
-	public void updateLocValues(final String[] newVals) {
+	public void updateLocValues(final UserPreferences.FoodDescription[] newVals) {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					locationAdapter.clear();
+					ArrayList<String> foodNames = new ArrayList<>();
 					for (int i = 0; i < newVals.length; i++) {
-						locationAdapter.add(newVals[i]);
+						String foodname = newVals[i].FoodName;
+						if(newVals[i].HasModifiers) {
+							for (String mod : newVals[i].Modifiers) {
+								foodname = foodname.replace(mod, "");
+							}
+						}
+						if(!foodNames.contains(foodname)) {
+							foodNames.add(foodname);
+							locationAdapter.add(foodname);
+						} else {
+							//add its modifier to the existing item
+						}
 					}
+					locationAdapter.notifyDataSetChanged();
 				} catch (Exception e) {
-					Log.d("SERVCOMM", "Exception: " + e.getMessage());
+					Log.d("SERVCOMM", "Exception: " + e.toString());
 				}
 			}
 		});
