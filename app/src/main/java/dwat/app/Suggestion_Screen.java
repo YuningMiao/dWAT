@@ -33,26 +33,26 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 public class Suggestion_Screen extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks{
-    private static final String TODO = "";
-    String curDate;
-    String curLoc;
-    ListView suggestList;
+	private static final String TODO = "";
+	String curDate;
+	String curLoc;
+	ListView suggestList;
 	RelativeLayout screen;
-    //String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
+	//String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
 	ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
 	ArrayAdapter<String> locationAdapter;
 	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
 
-    private String getCurDate() {
-        Calendar c = Calendar.getInstance();
+	private String getCurDate() {
+		Calendar c = Calendar.getInstance();
 
-        curDate = c.get(Calendar.MONTH) + 1 + "-" + c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.YEAR) + " ";
-        curDate += c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
-        return curDate;
-    }
+		curDate = c.get(Calendar.MONTH) + 1 + "-" + c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.YEAR) + " ";
+		curDate += c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
+		return curDate;
+	}
 
-    private String getCurLocation() {
+	private String getCurLocation() {
 		if(curLoc == null || curLoc == "")
 			return null;
 		else
@@ -66,13 +66,13 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		setContentView(R.layout.activity_suggest2);
 
 		mGoogleApiClient = new GoogleApiClient
-			.Builder( this )
-			.enableAutoManage( this, 0, this )
-			.addApi( Places.GEO_DATA_API )
-			.addApi( Places.PLACE_DETECTION_API )
-			.addConnectionCallbacks( this )
-			.addOnConnectionFailedListener( this )
-			.build();
+				.Builder( this )
+				.enableAutoManage( this, 0, this )
+				.addApi( Places.GEO_DATA_API )
+				.addApi( Places.PLACE_DETECTION_API )
+				.addConnectionCallbacks( this )
+				.addOnConnectionFailedListener( this )
+				.build();
 
 		guessCurrentPlace();
 
@@ -85,6 +85,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 			public void onSwipeLeft() {
 				Intent intent = new Intent(Suggestion_Screen.this, Camera_Main.class);
+				intent.putExtra("location", curLoc);
 				startActivity(intent);
 			}
 		});
@@ -114,6 +115,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			@Override
 			public void onClick(View v) {
 				Intent intent = new Intent(v.getContext(), Camera_Main.class);
+				intent.putExtra("location", curLoc);
 				startActivityForResult(intent, 0);
 			}
 		});
@@ -211,6 +213,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 							up.RequestMenu(curLoc, Suggestion_Screen.this);
 
 							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
+
 						}
 					});
 

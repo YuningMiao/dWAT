@@ -14,8 +14,11 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,7 +45,9 @@ public class Camera_Main extends FragmentActivity {
     String curLoc;
     RelativeLayout screen;
     File f;
-
+    ArrayList<String> tags = new ArrayList<String>(Arrays.asList("Tag 1", "Tag 2", "Tag 3"));
+    ListView photoTags;
+    ArrayAdapter<String> tagAdapter;
 
     private String getCurDate() {
         Calendar c = Calendar.getInstance();
@@ -58,15 +64,11 @@ public class Camera_Main extends FragmentActivity {
             return curLoc;
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-
-        /*StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);*/
 
         curLoc = (String) getIntent().getSerializableExtra("location");
 
@@ -79,10 +81,6 @@ public class Camera_Main extends FragmentActivity {
                 startActivity(intent);
             }
         });
-
-
-        /*service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
-        service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");*/
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File f = new File(android.os.Environment.getExternalStorageDirectory(),"temp.jpg");
@@ -100,15 +98,34 @@ public class Camera_Main extends FragmentActivity {
                 startActivity(backIntent);
             }
         });
+
         addBttn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 History newMeal;
-                if(getCurLocation() == null) {
+                if (getCurLocation() == null) {
                     newMeal = new History("Tags", getCurDate());
-                }
-                else
+                } else
                     newMeal = new History("Tags", getCurDate(), getCurLocation());
+                Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(Camera_Main.this, History_Screen.class);
+                intent.putExtra("meal", newMeal);
+                startActivity(intent);
+            }
+        });
+
+        tagAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, tags);
+        photoTags = (ListView) findViewById(R.id.photoTags);
+        photoTags.setAdapter(tagAdapter);
+        photoTags.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                History newMeal;
+                if (getCurLocation() == null) {
+                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
+                } else
+                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
                 Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
 
                 Intent intent = new Intent(Camera_Main.this, History_Screen.class);
@@ -120,7 +137,6 @@ public class Camera_Main extends FragmentActivity {
 
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        TextView photoTags = (TextView) findViewById(R.id.photoTags);
 
         if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
             f = new File(Environment.getExternalStorageDirectory().toString());
@@ -135,50 +151,16 @@ public class Camera_Main extends FragmentActivity {
                 BitmapFactory.Options photoOptions = new BitmapFactory.Options();
                 photo = BitmapFactory.decodeFile(f.getAbsolutePath(), photoOptions);
 
-                File image = new File(f.getAbsolutePath());
+//                File image = new File(f.getAbsolutePath());
+
                 // make photo portrait and set placeholder
                 Matrix matrix = new Matrix();
                 matrix.postRotate(90);
                 photo = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
                 picImg.setImageBitmap(photo);
 
-
-                Log.e("TAG", "Classify using all the classifiers");
                 new visual().execute();
-                /*VisualClassification result = service.classify(image);
 
-
-                System.out.println(result);
-                Log.e("TAG", String.valueOf(result) + " - hello");
-                String result1 = result.toString();
-                Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");
-                Matcher matcher = pattern.matcher(result1);
-                ArrayList<String> results = new ArrayList<String>(20);
-                while (matcher.find()) {
-                    System.out.println(matcher.group(1));
-                    results.add(matcher.group(1));
-                }
-
-                photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));*/
-
-//                String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
-
-//                OutputStream outFile = null;
-//                File file = new File(path, String.valueOf(System.currentTimeMillis() + ".jpg"));
-//
-//
-//                try {
-//                    outFile = new FileOutputStream(file);
-//                    photo.compress(Bitmap.CompressFormat.JPEG, 100, outFile);
-//                    outFile.flush();
-//                    outFile.close();
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -188,10 +170,11 @@ public class Camera_Main extends FragmentActivity {
 
     @Override
     public void onBackPressed() {
+        Intent backIntent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+        startActivity(backIntent);
     }
 
     public class visual extends AsyncTask<Void, Void, Integer> {
-        TextView photoTags = (TextView) findViewById(R.id.photoTags);
         VisualRecognition service;
         VisualClassification result;
         File image;
@@ -218,6 +201,7 @@ public class Camera_Main extends FragmentActivity {
             results = new ArrayList<String>(20);
             while (matcher.find()) {
                 System.out.println(matcher.group(1));
+
                 results.add(matcher.group(1));
             }
             return 1;
@@ -230,11 +214,15 @@ public class Camera_Main extends FragmentActivity {
 
         protected void onPostExecute(Integer result){
             pd.dismiss();
-            photoTags.setText(results.get(0) + "\n" + results.get(1) + "\n" + results.get(2));
+
+            tags.clear();
+            tags.add(results.get(0));
+            tags.add(results.get(1));
+            tags.add(results.get(2));
+            tags.add(results.get(3));
+
+            tagAdapter.notifyDataSetChanged();
             f.delete();
         }
-
-
     }
-
 }
