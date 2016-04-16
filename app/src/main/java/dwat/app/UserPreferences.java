@@ -259,7 +259,6 @@ public class UserPreferences {
         if(maxCount > 5)
             maxCount = maxCount/2;
         value += (double)meal.count/(double)maxCount;
-        //System.out.println(meal.food + " " + (meal.count/maxCount));
         return value;
     }
 
@@ -271,20 +270,9 @@ public class UserPreferences {
             }
         }
         System.out.println("MaxCount: " + maxCount);
-        //double[] values = new double[userHistory.length];
-        //double maxVal = -1;
-        //int maxInd = -1;
         for(int i = 0; i < userHistory.length; i++){
             userHistory[i].value = valueFunction(userHistory[i], location, date, maxCount);
-            //Log.d("UPREF", userHistory[i].getFoodName() + ": " + userHistory[i].value);
-            /*if(values[i] > maxVal){
-                maxVal = values[i];
-                maxInd = i;
-            }*/
         }
-        /*for (double val: values)
-            System.out.print(val + " ");*/
-        //return userHistory[maxInd].food;
         long start = System.currentTimeMillis();
         quickSort(userHistory, 0, userHistory.length - 1);
         long end = System.currentTimeMillis();

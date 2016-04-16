@@ -10,46 +10,43 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class MealEntry implements Serializable {
-    ArrayList<String> foods;
-    ArrayList<String[]> modifiers; //size modifiers
-    ArrayList<String[]> badmodifiers; //strings to remove from modifiers to make it presentable to the user
-    String location;
-    Date date;
-    int count;
-    double value;
+    ArrayList<String> foods = new ArrayList<>();
+    ArrayList<String[]> modifiers = new ArrayList<>(); //size modifiers
+    ArrayList<String[]> badmodifiers = new ArrayList<>(); //strings to remove from modifiers to make it presentable to the user
+    String location = "";
+    Date date = null;
+    int count = 0;
+    double value = 0.0;
 
     MealEntry(String location, Date date, UserPreferences.FoodDescription fd) {
-        MealEntry m = new MealEntry (location, new Date());
+        this.location = location;
+        this.date = date;
         String foodname = fd.FoodName;
         if(fd.HasModifiers) {
             for (String mod : fd.Modifiers) {
                 foodname = foodname.replace(mod, "");
             }
         }
-        if(!m.foods.contains(foodname)) {
-            m.foods.add(foodname);
+        if(!foods.contains(foodname)) {
+            foods.add(foodname);
         }
         if (fd.HasModifiers){
             //add its modifier to the existing item
-            m.modifiers.add(fd.Modifiers);
-            m.badmodifiers.add(fd.BadModifiers);
+            modifiers.add(fd.Modifiers);
+            badmodifiers.add(fd.BadModifiers);
         } else {
-            m.modifiers.add(new String[0]);
-            m.badmodifiers.add(new String[0]);
+            modifiers.add(new String[0]);
+            badmodifiers.add(new String[0]);
         }
 
     }
 
     MealEntry(String location, Date date) {
-        this();
         this.location = location;
         this.date = date;
     }
 
     MealEntry() {
-        this.foods = new ArrayList<>();
-        this.modifiers = new ArrayList<>();
-        this.badmodifiers = new ArrayList<>();
     }
 
     public void add(String food, String[] modifiers) {
@@ -63,10 +60,14 @@ public class MealEntry implements Serializable {
         if(location != null) {
             sb.append(location);
             sb.append(",");
+        } else {
+            sb.append("location=null,");
         }
         if(date != null) {
             sb.append(date.toString());
             sb.append(",");
+        } else {
+            sb.append("date=null,");
         }
         sb.append(foods.size());
         sb.append(",");
@@ -76,8 +77,10 @@ public class MealEntry implements Serializable {
         return sb.toString();
     }
 
-    public void Serialize(FileWriter fw) throws IOException {
-        if(foods == null || modifiers == null || badmodifiers == null || date == null || location == null) return;
+    public void Serialize(FileWriter fw) throws IOException, NullPointerException {
+        if(foods == null || modifiers == null || badmodifiers == null || date == null || location == null) {
+            throw new NullPointerException(toString());
+        }
         fw.write(foods.size());
         for(String s : foods) {
             fw.write(s);
