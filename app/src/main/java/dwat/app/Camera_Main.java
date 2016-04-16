@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -46,7 +47,7 @@ public class Camera_Main extends FragmentActivity {
     RelativeLayout screen;
     File f;
     ArrayList<String> tags = new ArrayList<String>(Arrays.asList("Tag 1", "Tag 2", "Tag 3"));
-    ListView photoTags;
+    ExpandableListView photoTags;
     ArrayAdapter<String> tagAdapter;
 
     private String getCurDate() {
@@ -116,7 +117,7 @@ public class Camera_Main extends FragmentActivity {
         });
 
         tagAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, tags);
-        photoTags = (ListView) findViewById(R.id.photoTags);
+        photoTags = (ExpandableListView) findViewById(R.id.photoTags);
         photoTags.setAdapter(tagAdapter);
         photoTags.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
