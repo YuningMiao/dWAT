@@ -216,11 +216,15 @@ public class Camera_Main extends FragmentActivity {
             pd.dismiss();
 
             tags.clear();
-            tags.add(results.get(0));
-            tags.add(results.get(1));
-            tags.add(results.get(2));
-            tags.add(results.get(3));
-
+            for(int i = 0; i < results.size(); i++){
+                tags.add(results.get(i));
+            }
+//            if(results.size() > 19) {
+//                tags.add(results.get(0));
+//                tags.add(results.get(1));
+//                tags.add(results.get(2));
+//                tags.add(results.get(3));
+//            }
             tagAdapter.notifyDataSetChanged();
             f.delete();
         }

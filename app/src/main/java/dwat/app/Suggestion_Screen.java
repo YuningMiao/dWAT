@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.DataSetObserver;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -12,14 +14,19 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -36,30 +43,46 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.ExpandableListView.OnGroupClickListener;
+import android.widget.ExpandableListView.OnGroupExpandListener;
 
 public class Suggestion_Screen extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks{
-    private static final String TODO = "";
-    String curDate;
-    String curLoc;
-    ListView suggestList;
+	private static final String TODO = "";
+	String curDate;
+	String curLoc;
+
+	private static ExpandableListView suggestList;
+	private static ExpandableListAdapter adapter;
+	List listTitle;
+	HashMap<String, List<String>> listDetail;
+//	private ExpandableListAdapter adapter;
+
 	RelativeLayout screen;
 	ArrayList<MealEntry> userHistory = new ArrayList<>();
 	MealEntry[] mealEntries;
-    //String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
-	ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
+	//String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
+	//ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
 	ArrayAdapter<String> locationAdapter;
 	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
 
-    private String getCurDate() {
-        Calendar c = Calendar.getInstance();
 
-        curDate = c.get(Calendar.MONTH) + 1 + "-" + c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.YEAR) + " ";
-        curDate += c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
-        return curDate;
-    }
+	private String getCurDate() {
+		Calendar c = Calendar.getInstance();
 
-    private String getCurLocation() {
+		curDate = c.get(Calendar.MONTH) + 1 + "-" + c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.YEAR) + " ";
+		curDate += c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
+		return curDate;
+	}
+
+	private String getCurLocation() {
 		if(curLoc == null || curLoc == "")
 			return null;
 		else
@@ -72,16 +95,18 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_suggest2);
 
+		// ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
+		// See https://g.co/AppIndexing/AndroidStudio for more information.
 		mGoogleApiClient = new GoogleApiClient
-			.Builder( this )
-			.enableAutoManage( this, 0, this )
-			.addApi( Places.GEO_DATA_API )
-			.addApi( Places.PLACE_DETECTION_API )
-			.addConnectionCallbacks( this )
-			.addOnConnectionFailedListener( this )
-			.build();
+				.Builder(this)
+				.enableAutoManage(this, 0, this)
+				.addApi(Places.GEO_DATA_API)
+				.addApi(Places.PLACE_DETECTION_API)
+				.addConnectionCallbacks(this)
+				.addOnConnectionFailedListener(this)
+				.addApi(AppIndex.API).build();
 
-		guessCurrentPlace();
+//		guessCurrentPlace();
 
 		screen = (RelativeLayout) findViewById(R.id.suggestScreen);
 		screen.setOnTouchListener(new OnSwipeTouchListener(Suggestion_Screen.this) {
@@ -92,35 +117,42 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 			public void onSwipeLeft() {
 				Intent intent = new Intent(Suggestion_Screen.this, Camera_Main.class);
+				intent.putExtra("location", curLoc);
 				startActivity(intent);
 			}
 		});
 
+		suggestList = (ExpandableListView) findViewById(R.id.suggestList);
+		suggestList.setGroupIndicator(null);
 
-		locationAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, locValues);
-		suggestList = (ListView) findViewById(R.id.suggestList);
-		suggestList.setAdapter(locationAdapter);
-		suggestList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				History newMeal;
-				if (getCurLocation() == null) {
-					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
-				} else
-					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
-				Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+		setItems();
+		setListener();
 
-				Intent intent = new Intent(Suggestion_Screen.this, History_Screen.class);
-				intent.putExtra("meal", newMeal);
-				startActivity(intent);
-			}
-		});
+//		locationAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, locValues);
+//		suggestList = (ExpandableListView) findViewById(R.id.suggestList);
+//		suggestList.setAdapter((ExpandableListAdapter)locationAdapter);
+//		suggestList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//			@Override
+//			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//				History newMeal;
+//				if (getCurLocation() == null) {
+//					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
+//				} else
+//					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
+//				Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+//
+//				Intent intent = new Intent(Suggestion_Screen.this, History_Screen.class);
+//				intent.putExtra("meal", newMeal);
+//				startActivity(intent);
+//			}
+//		});
 
 		ImageButton cameraButton = (ImageButton) findViewById(R.id.cameraButton);
 		cameraButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				Intent intent = new Intent(v.getContext(), Camera_Main.class);
+				intent.putExtra("location", curLoc);
 				startActivityForResult(intent, 0);
 			}
 		});
@@ -145,6 +177,112 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 		new ReadMealEntries().execute(); //read old MealEntry items from userhist.dat
 	}
+
+	void setItems() {
+
+		// Array list for header
+		ArrayList<String> header = new ArrayList<String>();
+
+		// Array list for child items
+		List<String> child1 = new ArrayList<String>();
+		List<String> child2 = new ArrayList<String>();
+		List<String> child3 = new ArrayList<String>();
+		List<String> child4 = new ArrayList<String>();
+
+		// Hash map for both header and child
+		HashMap<String, List<String>> hashMap = new HashMap<String, List<String>>();
+
+		// Adding headers to list
+		for (int i = 1; i < 5; i++) {
+			header.add("Group " + i);
+
+		}
+		// Adding child data
+		for (int i = 1; i < 5; i++) {
+			child1.add("Group 1  - " + " : Child" + i);
+
+		}
+		// Adding child data
+		for (int i = 1; i < 5; i++) {
+			child2.add("Group 2  - " + " : Child" + i);
+
+		}
+		// Adding child data
+		for (int i = 1; i < 6; i++) {
+			child3.add("Group 3  - " + " : Child" + i);
+
+		}
+		// Adding child data
+//		for (int i = 1; i < 7; i++) {
+//			child4.add("Group 4  - " + " : Child" + i);
+//
+//		}
+
+		// Adding header and childs to hash map
+		hashMap.put(header.get(0), child1);
+		hashMap.put(header.get(1), child2);
+		hashMap.put(header.get(2), child3);
+		hashMap.put(header.get(3), child4);
+
+		adapter = new dwat.app.ExpandableListAdapter(Suggestion_Screen.this, header, hashMap);
+
+		// Setting adpater over expandablelistview
+		suggestList.setAdapter(adapter);
+		Log.e("TAG", "got to here");
+		Toast.makeText(Suggestion_Screen.this, "hello", Toast.LENGTH_LONG).show();
+	}
+
+	// Setting different listeners to expandablelistview
+	void setListener() {
+
+		// This listener will show toast on group click
+		suggestList.setOnGroupClickListener(new OnGroupClickListener() {
+
+			@Override
+			public boolean onGroupClick(ExpandableListView listview, View view,
+										int group_pos, long id) {
+
+				Toast.makeText(Suggestion_Screen.this,
+						"You clicked : " + adapter.getGroup(group_pos),
+						Toast.LENGTH_SHORT).show();
+				return false;
+			}
+		});
+
+		// This listener will expand one group at one time
+		// You can remove this listener for expanding all groups
+		suggestList
+				.setOnGroupExpandListener(new OnGroupExpandListener() {
+
+					// Default position
+					int previousGroup = -1;
+
+					@Override
+					public void onGroupExpand(int groupPosition) {
+						if (groupPosition != previousGroup)
+
+							// Collapse the expanded group
+							suggestList.collapseGroup(previousGroup);
+						previousGroup = groupPosition;
+					}
+
+				});
+
+		// This listener will show toast on child click
+		suggestList.setOnChildClickListener(new OnChildClickListener() {
+
+			@Override
+			public boolean onChildClick(ExpandableListView listview, View view,
+										int groupPos, int childPos, long id) {
+				Toast.makeText(
+						Suggestion_Screen.this,
+						"You clicked : " + adapter.getChild(groupPos, childPos),
+						Toast.LENGTH_SHORT).show();
+				return false;
+			}
+		});
+	}
+
 
 	public void updateLocValues(final UserPreferences.FoodDescription[] newVals) {
 		final MealEntry m = new MealEntry (curLoc, new Date());
@@ -186,10 +324,23 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	}
 
 	@Override
-	protected void onStart(){
+	protected void onStart() {
 		super.onStart();
 		if (mGoogleApiClient != null)
 			mGoogleApiClient.connect();
+		// ATTENTION: This was auto-generated to implement the App Indexing API.
+		// See https://g.co/AppIndexing/AndroidStudio for more information.
+		Action viewAction = Action.newAction(
+				Action.TYPE_VIEW, // TODO: choose an action type.
+				"Suggestion_Screen Page", // TODO: Define a title for the content shown.
+				// TODO: If you have web page content that matches this app activity's content,
+				// make sure this auto-generated web page URL is correct.
+				// Otherwise, set the URL to null.
+				Uri.parse("http://host/path"),
+				// TODO: Make sure this auto-generated app deep link URI is correct.
+				Uri.parse("android-app://dwat.app/http/host/path")
+		);
+		AppIndex.AppIndexApi.start(mGoogleApiClient, viewAction);
 	}
 
 	@Override
@@ -198,6 +349,19 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			mGoogleApiClient.disconnect();
 		}
 		super.onStop();
+		// ATTENTION: This was auto-generated to implement the App Indexing API.
+		// See https://g.co/AppIndexing/AndroidStudio for more information.
+		Action viewAction = Action.newAction(
+				Action.TYPE_VIEW, // TODO: choose an action type.
+				"Suggestion_Screen Page", // TODO: Define a title for the content shown.
+				// TODO: If you have web page content that matches this app activity's content,
+				// make sure this auto-generated web page URL is correct.
+				// Otherwise, set the URL to null.
+				Uri.parse("http://host/path"),
+				// TODO: Make sure this auto-generated app deep link URI is correct.
+				Uri.parse("android-app://dwat.app/http/host/path")
+		);
+		AppIndex.AppIndexApi.end(mGoogleApiClient, viewAction);
 	}
 
 	private void guessCurrentPlace() {
