@@ -96,7 +96,16 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_suggest2);
 
-//		guessCurrentPlace();
+		mGoogleApiClient = new GoogleApiClient
+				.Builder( this )
+				.enableAutoManage( this, 0, this )
+				.addApi( Places.GEO_DATA_API )
+				.addApi( Places.PLACE_DETECTION_API )
+				.addConnectionCallbacks( this )
+				.addOnConnectionFailedListener( this )
+				.build();
+
+		guessCurrentPlace();
 
 		screen = (RelativeLayout) findViewById(R.id.suggestScreen);
 		screen.setOnTouchListener(new OnSwipeTouchListener(Suggestion_Screen.this) {
@@ -314,8 +323,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			public void run() {
 				try {
 					locationAdapter.clear();
-					for(int i=0;i<ms.size();i++) {
-						for(String s : ms.get(i).foods) {
+					for (int i = 0; i < ms.size(); i++) {
+						for (String s : ms.get(i).foods) {
 							locationAdapter.add(s + " (value=" + ms.get(i).value + ")");
 							//locationAdapter.getCount()-1 = current index
 						}
@@ -327,6 +336,21 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			}
 		});
 		Log.d("SERVCOMM", "locValues set: " + ms.size() + " items");
+	}
+
+	private void makeAlert(boolean canDismiss, String title, String[] choices) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
+		builder.setTitle(title);
+		builder.setItems(choices, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+
+			}
+		});
+
+		AlertDialog alert = builder.create();
+		alert.show();
+
 	}
 
 	@Override
@@ -390,6 +414,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					});
 
 					AlertDialog alert = builder.create();
+					alert.setCanceledOnTouchOutside(false);
 					alert.show();
 
 				} catch (IllegalStateException e) {
