@@ -28,6 +28,8 @@ import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -43,10 +45,10 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
     String curLoc;
     ListView suggestList;
 	RelativeLayout screen;
-	ArrayList<MealEntry> userHistory = new ArrayList<>();
-	MealEntry[] mealEntries;
-    //String[] histValues = new String[]{"Food Item 1", "Food Item 2", "Food Item 3", "Food Item 4", "Food Item 5", "Food Item 6"};
-	ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
+	/*ArrayList<MealEntry> userHistory = new ArrayList<>();
+	MealEntry[] menu;
+	MealEntry[] mealEntries;*/
+    ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
 	ArrayAdapter<String> locationAdapter;
 	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
@@ -109,11 +111,25 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
 				} else
 					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
-				Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
 
-				mealHistIntent = new Intent(Suggestion_Screen.this, History_Screen.class);
+				String text = locationAdapter.getItem(position);
+				if(position < locationAdapter.getCount() &&
+						text != null &&
+						text.length() > 0) {
+					if(text.startsWith("\u2713 ") && text.length() > 2) {
+						locationAdapter.remove(text);
+						locationAdapter.insert(text.substring(2), position);
+						Toast.makeText(getApplicationContext(), "Item Removed", Toast.LENGTH_SHORT).show();
+					} else {
+						locationAdapter.remove(text);
+						locationAdapter.insert("\u2713 " + text, position);
+						Toast.makeText(getApplicationContext(), "Item Added", Toast.LENGTH_SHORT).show();
+					}
+				}
+				locationAdapter.notifyDataSetChanged();
+				/*mealHistIntent = new Intent(Suggestion_Screen.this, History_Screen.class);
 				mealHistIntent.putExtra("meal", newMeal);
-				startActivity(mealHistIntent);
+				startActivity(mealHistIntent);*/
 			}
 		});
 
@@ -147,7 +163,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		new ReadMealEntries().execute(); //read old MealEntry items from userhist.dat
 	}
 
-	public void updateLocValues(final UserPreferences.FoodDescription[] newVals) {
+	public void updateLocValues(final ServerQuery.FoodDescription[] newVals) {
 		final ArrayList<MealEntry> ms = new ArrayList<>();
 		for (int i=0;i<newVals.length;i++) {
 			MealEntry m = new MealEntry(curLoc, new Date(), newVals[i]);
@@ -165,11 +181,22 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			}
 		}
 
-		ms.addAll(userHistory);
+		ServerQuery.menu = ms.toArray(new MealEntry[ms.size()]);
 		try {
-			MealEntry[] sortedMes = ms.toArray(new MealEntry[ms.size()]);
+			ArrayList<MealEntry> combined = new ArrayList<>();
+			for(MealEntry m : UserPreferences.userHistory) {
+				if(m != null) {
+					combined.add(m);
+				}
+			}
+			for(MealEntry m : ServerQuery.menu) {
+				if(m != null) {
+					combined.add(m);
+				}
+			}
+			MealEntry[] sortedMes = combined.toArray(new MealEntry[combined.size()]);
 			sortedMes = UserPreferences.userPreference(sortedMes, curLoc, new Date());
-		} catch(Exception e) { Log.d("UPREF", e.toString()); }
+		} catch(Exception e) { Log.d("UPREF", "Exception in UPREF: " + e.toString()); }
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -244,8 +271,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 							//locationAdapter.notifyDataSetChanged();
 							curLoc = locs.get(which);
 
-							UserPreferences up = new UserPreferences();
-							up.RequestMenu(curLoc, Suggestion_Screen.this);
+							ServerQuery sq = new ServerQuery();
+							sq.RequestMenu(curLoc, Suggestion_Screen.this);
 
 							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
 						}
@@ -312,13 +339,10 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 				count = fr.read();
 				Log.d("UPREF", "Count=" + count);
 				if(count > 0) {
-					mealEntries = new MealEntry[Math.min(count,maxCount)];
 					for(int i=0;i<count;i++) {
-						mealEntries[i%maxCount] = MealEntry.Deserialize(fr);
-						Log.d("UPREF", mealEntries[i].toString());
+						UserPreferences.userHistory[i%maxCount] = MealEntry.Deserialize(fr);
+						Log.d("UPREF", UserPreferences.userHistory[i].toString());
 					}
-				} else {
-					mealEntries = new MealEntry[0];
 				}
 			} catch(IOException e) {
 				Log.d("UPREF", e.toString());

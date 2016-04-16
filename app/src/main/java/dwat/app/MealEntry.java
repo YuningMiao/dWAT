@@ -18,7 +18,7 @@ public class MealEntry implements Serializable {
     int count = 0;
     double value = 0.0;
 
-    MealEntry(String location, Date date, UserPreferences.FoodDescription fd) {
+    MealEntry(String location, Date date, ServerQuery.FoodDescription fd) {
         this.location = location;
         this.date = date;
         String foodname = fd.FoodName;

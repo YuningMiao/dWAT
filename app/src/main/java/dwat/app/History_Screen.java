@@ -59,7 +59,8 @@ public class History_Screen extends Activity {
         hist = (History) getIntent().getSerializableExtra("meal");
         if(hist != null && !hist.getHist().isEmpty() && hist.getHist().length() > 0) {
             //histValues.add(hist.getHist());
-            up.RequestFoodDescription(hist.getLocName(), hist.getMealName(), this);
+            ServerQuery sq = new ServerQuery();
+            sq.RequestFoodDescription(hist.getLocName(), hist.getMealName(), this);
         }
 
         histAdpt = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, histValues);
@@ -76,7 +77,7 @@ public class History_Screen extends Activity {
         });
     }
 
-    public void updateFoodDescValues(UserPreferences.FoodDescription fd) {
+    public void updateFoodDescValues(ServerQuery.FoodDescription fd) {
         if(fd == null) return;
 
         for (Field field : fd.getClass().getDeclaredFields()) {

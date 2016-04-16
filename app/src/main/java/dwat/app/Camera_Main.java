@@ -70,7 +70,7 @@ public class Camera_Main extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        curLoc = (String) getIntent().getSerializableExtra("location");
+        curLoc = getIntent().getStringExtra("location");
 
         picImg = (ImageView)findViewById(R.id.foodPic);
 
@@ -220,6 +220,13 @@ public class Camera_Main extends FragmentActivity {
             tags.add(results.get(1));
             tags.add(results.get(2));
             tags.add(results.get(3));
+
+/*
+            for(int i=0;i<Math.min(10,ServerQuery.menu.length);i++) {
+                for(String s : ServerQuery.menu[i].foods) {
+                    tags.add(s);
+                }
+            }*/
 
             tagAdapter.notifyDataSetChanged();
             f.delete();
