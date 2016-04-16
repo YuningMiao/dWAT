@@ -25,8 +25,6 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -97,17 +95,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_suggest2);
-
-		// ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
-		// See https://g.co/AppIndexing/AndroidStudio for more information.
-		mGoogleApiClient = new GoogleApiClient
-				.Builder(this)
-				.enableAutoManage(this, 0, this)
-				.addApi(Places.GEO_DATA_API)
-				.addApi(Places.PLACE_DETECTION_API)
-				.addConnectionCallbacks(this)
-				.addOnConnectionFailedListener(this)
-				.addApi(AppIndex.API).build();
 
 //		guessCurrentPlace();
 
@@ -287,17 +274,31 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	}
 
 
-	public void updateLocValues(final UserPreferences.FoodDescription[] newVals) {
-		final MealEntry m = new MealEntry (curLoc, new Date());
-		for (int i = 0; i < newVals.length; i++) {
-			String foodname = newVals[i].FoodName;
-			if(newVals[i].HasModifiers) {
-				for (String mod : newVals[i].Modifiers) {
-					foodname = foodname.replace(mod, "");
+	public void updateLocValues(final ServerQuery.FoodDescription[] newVals) {
+		final ArrayList<MealEntry> ms = new ArrayList<>();
+		for (int i=0;i<newVals.length;i++) {
+			MealEntry m = new MealEntry(curLoc, new Date(), newVals[i]);
+			boolean found = false;
+			for(int j=0;j<ms.size();j++) {
+				if(m.foods.size() > 0 && ms.get(j).foods.contains(m.foods.get(0))) {
+					ms.get(j).modifiers.add(newVals[i].Modifiers);
+					ms.get(j).badmodifiers.add(newVals[i].BadModifiers);
+					found = true;
+					break;
 				}
 			}
-			if(!m.foods.contains(foodname)) {
-				m.foods.add(foodname);
+			if(!found) {
+				ms.add(m);
+			}
+		}
+
+		ServerQuery.menu = ms.toArray(new MealEntry[ms.size()]);
+		try {
+			ArrayList<MealEntry> combined = new ArrayList<>();
+			for(MealEntry m : UserPreferences.userHistory) {
+				if(m != null) {
+					combined.add(m);
+				}
 			}
 			for(MealEntry m : ServerQuery.menu) {
 				if(m != null) {
@@ -333,19 +334,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		super.onStart();
 		if (mGoogleApiClient != null)
 			mGoogleApiClient.connect();
-		// ATTENTION: This was auto-generated to implement the App Indexing API.
-		// See https://g.co/AppIndexing/AndroidStudio for more information.
-		Action viewAction = Action.newAction(
-				Action.TYPE_VIEW, // TODO: choose an action type.
-				"Suggestion_Screen Page", // TODO: Define a title for the content shown.
-				// TODO: If you have web page content that matches this app activity's content,
-				// make sure this auto-generated web page URL is correct.
-				// Otherwise, set the URL to null.
-				Uri.parse("http://host/path"),
-				// TODO: Make sure this auto-generated app deep link URI is correct.
-				Uri.parse("android-app://dwat.app/http/host/path")
-		);
-		AppIndex.AppIndexApi.start(mGoogleApiClient, viewAction);
 	}
 
 	@Override
@@ -354,19 +342,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			mGoogleApiClient.disconnect();
 		}
 		super.onStop();
-		// ATTENTION: This was auto-generated to implement the App Indexing API.
-		// See https://g.co/AppIndexing/AndroidStudio for more information.
-		Action viewAction = Action.newAction(
-				Action.TYPE_VIEW, // TODO: choose an action type.
-				"Suggestion_Screen Page", // TODO: Define a title for the content shown.
-				// TODO: If you have web page content that matches this app activity's content,
-				// make sure this auto-generated web page URL is correct.
-				// Otherwise, set the URL to null.
-				Uri.parse("http://host/path"),
-				// TODO: Make sure this auto-generated app deep link URI is correct.
-				Uri.parse("android-app://dwat.app/http/host/path")
-		);
-		AppIndex.AppIndexApi.end(mGoogleApiClient, viewAction);
 	}
 
 	private void guessCurrentPlace() {
