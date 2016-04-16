@@ -70,7 +70,7 @@ public class Camera_Main extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        curLoc = (String) getIntent().getSerializableExtra("location");
+        curLoc = getIntent().getStringExtra("location");
 
         picImg = (ImageView)findViewById(R.id.foodPic);
 
