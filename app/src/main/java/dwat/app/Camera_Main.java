@@ -47,6 +47,7 @@ public class Camera_Main extends FragmentActivity {
     private ImageView picImg;
     String curDate;
     String curLoc;
+    long time;
     RelativeLayout screen;
     File f;
     ArrayList<String> header = new ArrayList<String>();
@@ -77,15 +78,26 @@ public class Camera_Main extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+//        Intent locationIntent = getIntent();
+//        Bundle extras = locationIntent.getExtras();
+//        if(extras != null){
+////            if(extras.containsKey("location"))
+////                curLoc = extras.getString("location");
+//            if(extras.containsKey("time"))
+//                time = extras.getLong("time");
+//        }
         curLoc = getIntent().getStringExtra("location");
+        time = getIntent().getLongExtra("time", 0L);
 
         picImg = (ImageView)findViewById(R.id.foodPic);
 
         screen = (RelativeLayout) findViewById(R.id.cameraScreen);
         screen.setOnTouchListener(new OnSwipeTouchListener(Camera_Main.this) {
             public void onSwipeRight() {
-                Intent intent = new Intent(Camera_Main.this, Suggestion_Screen.class);
-                startActivity(intent);
+                Intent swipeIntent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+                swipeIntent.putExtra("location", curLoc);
+                swipeIntent.putExtra("time", time);
+                startActivity(swipeIntent);
             }
         });
 
@@ -102,6 +114,8 @@ public class Camera_Main extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 Intent backIntent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+                backIntent.putExtra("location", curLoc);
+                backIntent.putExtra("time", time);
                 startActivity(backIntent);
             }
         });
@@ -116,9 +130,10 @@ public class Camera_Main extends FragmentActivity {
                     newMeal = new History("Tags", getCurDate(), getCurLocation());
                 Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
 
-                Intent intent = new Intent(Camera_Main.this, History_Screen.class);
-                intent.putExtra("meal", newMeal);
-                startActivity(intent);
+                Intent addIntent = new Intent(Camera_Main.this, History_Screen.class);
+                addIntent.putExtra("meal", newMeal);
+                addIntent.putExtra("time", time);
+                startActivity(addIntent);
             }
         });
 

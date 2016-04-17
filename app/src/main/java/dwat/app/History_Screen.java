@@ -39,6 +39,7 @@ public class History_Screen extends Activity {
     ArrayAdapter<String> histAdpt;
     History hist;
     RelativeLayout screen;
+    long time;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -49,6 +50,8 @@ public class History_Screen extends Activity {
         screen.setOnTouchListener(new OnSwipeTouchListener(History_Screen.this) {
             public void onSwipeLeft() {
                 Intent intent = new Intent(History_Screen.this, Suggestion_Screen.class);
+                intent.putExtra("location", hist.getLocName());
+                intent.putExtra("time", time);
                 startActivity(intent);
             }
         });
@@ -62,7 +65,7 @@ public class History_Screen extends Activity {
             ServerQuery sq = new ServerQuery();
             sq.RequestFoodDescription(hist.getLocName(), hist.getMealName(), this);
         }
-
+        time = getIntent().getLongExtra("time", 0L);
         histAdpt = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, histValues);
 
         history.setAdapter(histAdpt);
@@ -72,6 +75,8 @@ public class History_Screen extends Activity {
             @Override
             public void onClick(View v) {
                 Intent backIntent = new Intent(History_Screen.this, Suggestion_Screen.class);
+                backIntent.putExtra("location", hist.getLocName());
+                backIntent.putExtra("time", time);
                 startActivity(backIntent);
             }
         });

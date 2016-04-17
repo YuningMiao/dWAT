@@ -57,6 +57,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	private static final String TODO = "";
 	String curDate;
 	String curLoc;
+	long timeFromOther;
+	long timeNow;
 
 	private static ExpandableListView suggestList;
 	private static ExpandableListAdapter adapter;
@@ -74,6 +76,18 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	private GoogleApiClient mGoogleApiClient;
 	Intent mealHistIntent;
 
+	private boolean check5Minutes(){
+
+		if(timeNow != 0 && timeFromOther != 0) {
+			long difference = timeNow - timeFromOther;
+			double minutes = (double)difference / (1000 * 60);
+			if(minutes >=  4.99) {
+				Log.e("TAG", "check 5 minutes true");
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private String getCurDate() {
 		Calendar c = Calendar.getInstance();
@@ -96,6 +110,25 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_suggest2);
 
+		timeNow = Calendar.getInstance().getTimeInMillis();
+
+//		Intent locationIntent = getIntent();
+		Bundle extras = getIntent().getExtras();
+		if(extras == null) {
+
+		}
+		else {
+			curLoc = extras.getString("location");
+			timeFromOther = extras.getLong("time");
+		}
+//			if(extras.containsKey("location"))
+//				curLoc = extras.getString("location");
+//			if(extras.containsKey("time"))
+//				timeFromOther = extras.getLong("time");
+//			Log.e("TAG", timeNow + " now ");
+			Log.e("TAG", timeFromOther + " other");
+		//}
+
 		mGoogleApiClient = new GoogleApiClient
 				.Builder( this )
 				.enableAutoManage( this, 0, this )
@@ -105,18 +138,20 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 				.addOnConnectionFailedListener( this )
 				.build();
 
-		guessCurrentPlace();
+		guessCurrentPlace(false);
 
 		screen = (RelativeLayout) findViewById(R.id.suggestScreen);
 		screen.setOnTouchListener(new OnSwipeTouchListener(Suggestion_Screen.this) {
 			public void onSwipeRight() {
 				Intent intent = new Intent(Suggestion_Screen.this, History_Screen.class);
+				intent.putExtra("time", timeNow);
 				startActivity(intent);
 			}
 
 			public void onSwipeLeft() {
 				Intent intent = new Intent(Suggestion_Screen.this, Camera_Main.class);
 				intent.putExtra("location", curLoc);
+				intent.putExtra("time", timeNow);
 				startActivity(intent);
 			}
 		});
@@ -152,6 +187,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			public void onClick(View v) {
 				Intent intent = new Intent(v.getContext(), Camera_Main.class);
 				intent.putExtra("location", curLoc);
+				intent.putExtra("time", timeNow);
 				startActivityForResult(intent, 0);
 			}
 		});
@@ -168,7 +204,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 								new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
 								1000);
 					} else {
-						guessCurrentPlace();
+						timeNow = Calendar.getInstance().getTimeInMillis();
+						guessCurrentPlace(true);
 					}
 				}
 			}
@@ -233,7 +270,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		for(int i = 0; i < adapter.getGroupCount(); i++){
 			suggestList.expandGroup(i);
 		}
-		Log.e("TAG", "got to here");
+
 		Toast.makeText(Suggestion_Screen.this, "hello", Toast.LENGTH_LONG).show();
 	}
 
@@ -374,7 +411,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		super.onStop();
 	}
 
-	private void guessCurrentPlace() {
+
+	private void guessCurrentPlace(final boolean refresh) {
 		PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace( mGoogleApiClient, null );
 		result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
 			@Override
@@ -403,25 +441,31 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					locs.add("Chicken Express");
 					CharSequence[] cs = locs.toArray(new CharSequence[locs.size()]);
 
-					AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
-					builder.setTitle("Select your location");
-					builder.setItems(cs, new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							//locValues.add("Meal based on " + locs.get(which));
-							//locationAdapter.notifyDataSetChanged();
-							curLoc = locs.get(which);
 
-							ServerQuery sq = new ServerQuery();
-							sq.RequestMenu(curLoc, Suggestion_Screen.this);
 
-							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
-						}
-					});
+					if(curLoc == null || refresh == true || check5Minutes() == true){
+						Log.e("TAG", locs.get(0));
+						Log.e("TAG", "got to here");
+						AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
+						builder.setTitle("Select your location");
+						builder.setItems(cs, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								//locValues.add("Meal based on " + locs.get(which));
+								//locationAdapter.notifyDataSetChanged();
+								curLoc = locs.get(which);
 
-					AlertDialog alert = builder.create();
-					alert.setCanceledOnTouchOutside(false);
-					alert.show();
+								ServerQuery sq = new ServerQuery();
+								sq.RequestMenu(curLoc, Suggestion_Screen.this);
+
+								Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
+							}
+						});
+
+						AlertDialog alert = builder.create();
+						alert.setCanceledOnTouchOutside(false);
+						alert.show();
+					}
 
 				} catch (IllegalStateException e) {
 					Log.w("TAG", "Fail to get place or its coordinates");
@@ -461,7 +505,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			case 1000:
 				if (grantResults.length > 0
 						&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					guessCurrentPlace();
+					guessCurrentPlace(false);
 				}
 				break;
 		}
