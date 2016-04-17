@@ -227,6 +227,12 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 		// Setting adpater over expandablelistview
 		suggestList.setAdapter(adapter);
+
+
+		// expand all lists for default // CHANGE IF WANT TO
+		for(int i = 0; i < adapter.getGroupCount(); i++){
+			suggestList.expandGroup(i);
+		}
 		Log.e("TAG", "got to here");
 		Toast.makeText(Suggestion_Screen.this, "hello", Toast.LENGTH_LONG).show();
 	}

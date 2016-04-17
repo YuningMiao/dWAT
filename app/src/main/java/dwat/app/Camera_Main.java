@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,6 +36,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,9 +49,12 @@ public class Camera_Main extends FragmentActivity {
     String curLoc;
     RelativeLayout screen;
     File f;
-    ArrayList<String> tags = new ArrayList<String>(Arrays.asList("Tag 1", "Tag 2", "Tag 3"));
-    ExpandableListView photoTags;
-    ArrayAdapter<String> tagAdapter;
+    ArrayList<String> header = new ArrayList<String>();
+    HashMap<String, List<String>> hashMap = new HashMap<String, List<String>>();
+
+//    ArrayList<String> tags = new ArrayList<String>(Arrays.asList("Tag 1", "Tag 2", "Tag 3"));
+    private static ExpandableListView photoTags;
+    private static android.widget.ExpandableListAdapter tagAdapter;
 
     private String getCurDate() {
         Calendar c = Calendar.getInstance();
@@ -116,26 +122,93 @@ public class Camera_Main extends FragmentActivity {
             }
         });
 
-        tagAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, tags);
-        photoTags = (ExpandableListView) findViewById(R.id.photoTags);
-        photoTags.setAdapter(tagAdapter);
-        photoTags.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                History newMeal;
-                if (getCurLocation() == null) {
-                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
-                } else
-                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
-                Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+        //tagAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, tags);
 
-                Intent intent = new Intent(Camera_Main.this, History_Screen.class);
-                intent.putExtra("meal", newMeal);
-                startActivity(intent);
+        photoTags = (ExpandableListView) findViewById(R.id.photoTags);
+        photoTags.setGroupIndicator(null);
+
+
+        //photoTags.setAdapter(tagAdapter);
+//        photoTags.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                History newMeal;
+//                if (getCurLocation() == null) {
+//                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
+//                } else
+//                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
+//                Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+//
+//                Intent intent = new Intent(Camera_Main.this, History_Screen.class);
+//                intent.putExtra("meal", newMeal);
+//                startActivity(intent);
+//            }
+//        });
+    }
+
+    void setItems(String parent, List<String> children) {
+        // Array list for child items
+        List<String> child = new ArrayList<String>();
+
+        // Hash map for both header and child
+
+
+        // Adding headers to list
+        header.add(parent);
+        for(int i = 0; i < children.size(); i++){
+            child.add(parent + " : " + i);
+        }
+
+        hashMap.put(header.get(header.size() - 1), child);
+
+
+    }
+
+    // Setting different listeners to expandablelistview
+    void setListener() {
+
+        // This listener will show toast on group click
+        photoTags.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+
+            @Override
+            public boolean onGroupClick(ExpandableListView listview, View view,
+                                        int group_pos, long id) {
+
+                Toast.makeText(Camera_Main.this,
+                        "You clicked : " + tagAdapter.getGroup(group_pos),
+                        Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+
+        // This listener will expand one group at one time
+        // You can remove this listener for expanding all groups
+        photoTags.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+
+            // Default position
+            int previousGroup = -1;
+
+            @Override
+            public void onGroupExpand(int groupPosition) {
+                if (groupPosition != previousGroup)
+
+                    // Collapse the expanded group
+                    photoTags.collapseGroup(previousGroup);
+                previousGroup = groupPosition;
+            }
+
+        });
+
+        // This listener will show toast on child click
+        photoTags.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+
+            @Override
+            public boolean onChildClick(ExpandableListView listview, View view,int groupPos, int childPos, long id) {
+                Toast.makeText(Camera_Main.this, "You clicked : " + tagAdapter.getChild(groupPos, childPos),Toast.LENGTH_SHORT).show();
+                return false;
             }
         });
     }
-
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -216,17 +289,16 @@ public class Camera_Main extends FragmentActivity {
         protected void onPostExecute(Integer result){
             pd.dismiss();
 
-            tags.clear();
+//            tags.clear();
+            List<String> children = new ArrayList<>();
             for(int i = 0; i < results.size(); i++){
-                tags.add(results.get(i));
+                setItems(results.get(i), children);
             }
-//            if(results.size() > 19) {
-//                tags.add(results.get(0));
-//                tags.add(results.get(1));
-//                tags.add(results.get(2));
-//                tags.add(results.get(3));
-//            }
-            tagAdapter.notifyDataSetChanged();
+//
+            tagAdapter = new dwat.app.ExpandableListAdapter(Camera_Main.this, header, hashMap);
+
+            photoTags.setAdapter(tagAdapter);
+            setListener();
             f.delete();
         }
     }
