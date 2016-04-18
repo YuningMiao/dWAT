@@ -30,7 +30,6 @@ import com.google.android.gms.location.places.Places;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -57,8 +56,9 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	private GoogleApiClient mGoogleApiClient;
 
 	final ArrayList<String> headers = new ArrayList<>();
-	HashMap<String, List<String>> headerMap = new HashMap<String, List<String>>();
-	
+	HashMap<String, List<String>> headerMap = new HashMap<>();
+	HashMap<String, String[]> modifiersMap = new HashMap<>();
+
 	MealEntry buildingMeal = new MealEntry();
 
 	private boolean check5Minutes(){
@@ -166,31 +166,110 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		new ReadMealEntries().execute(); //read old MealEntry items from userhist.dat
 	}
 
-	void markOrUnmarkElement(String foodname, String modifier, int groupIndex, int childIndex) {
-		if(foodname.startsWith("\u2713 ")) {
-			int index = buildingMeal.foods.indexOf(foodname.substring(2));
-			String old_foodname = buildingMeal.foods.get(index);
-			String checked_foodname = headers.get(groupIndex);
+	void forceUpdate(int groupIndex) {
+		suggestList.collapseGroup(groupIndex); //without this, the list will not update correctly
+		suggestList.expandGroup(groupIndex);   //needed for redraw
+	}
+
+	boolean isChecked(String s) {
+		return s != null && s.startsWith("\u2713 ");
+	}
+
+	void removeMealItem(String foodname, String modifier) {
+		foodname = foodname.startsWith("\u2713 ") ? foodname.substring(2) : foodname;
+		if(modifier != null)
+			modifier = modifier.startsWith("\u2713 ") ? modifier.substring(2) : modifier;
+		int index = buildingMeal.foods.indexOf(foodname);
+		if(index > -1) {
+			buildingMeal.foods.remove(index);
+			buildingMeal.modifiers.remove(index);
+		}
+	}
+
+	void addMealItem(String foodname, String modifier) {
+		buildingMeal.foods.add(foodname);
+		if (modifier != null)
+			buildingMeal.modifiers.add(new String[]{modifier});
+		else
+			buildingMeal.modifiers.add(new String[0]);
+	}
+
+	//checkmark an element if not checkmarked
+	void checkmarkElement(int groupIndex, int childIndex) {
+		String parent = headers.get(groupIndex);
+		String new_parent = "\u2713 " + parent;
+		if(!parent.startsWith("\u2713 ")) {
+			headers.set(groupIndex, new_parent);
+		}
+		if(headerMap.get(parent) != null && headerMap.get(parent).size() > 0 && childIndex >= 0) {
+			String child = headerMap.get(parent).get(childIndex);
+			if(!child.startsWith("\u2713 ")) {
+				List children = headerMap.get(parent);
+				headerMap.put(new_parent, children);
+				headerMap.get(new_parent).set(childIndex, "\u2713 " + child);
+				headerMap.remove(parent);
+			}
+		}
+	}
+
+	void uncheckmarkElement(int groupIndex, int childIndex) {
+		String parent = headers.get(groupIndex);
+		String new_parent = parent.substring(2);
+		int numChildrenChecked = 0;
+		boolean hasValidChild = headerMap.get(parent) != null && headerMap.get(parent).size() > 0 && childIndex >= 0;
+		if(hasValidChild) {
+			String child = headerMap.get(parent).get(childIndex);
+			if(child.startsWith("\u2713 ")) {
+				List<String> children = headerMap.get(parent);
+				for(String s : children) {
+					if(s.startsWith("\u2713 ")) {
+						numChildrenChecked++;
+					}
+				}
+				if(numChildrenChecked == 1) {
+					headerMap.put(new_parent, children);
+					headerMap.get(new_parent).set(childIndex, child.substring(2));
+					headerMap.remove(parent);
+				} else {
+					headerMap.get(parent).set(childIndex, child.substring(2));
+				}
+			}
+		}
+		if(parent.startsWith("\u2713 ") && (numChildrenChecked == 1 || !hasValidChild)) {
+			headers.set(groupIndex, new_parent);
+		}
+	}
+
+	void handleUpdate(int groupIndex, int childIndex) {
+
+	}
+
+/*
+	void markOrUnmarkElement(String parent, String child, int groupIndex, int childIndex) {
+		if(parent.startsWith("\u2713 ")) {
+			int index = buildingMeal.foods.indexOf(parent.substring(2));
+			String old_parent = buildingMeal.foods.get(index);
+			String checked_parent = headers.get(groupIndex);
 			String[] old_mods = buildingMeal.modifiers.get(index);
 			buildingMeal.modifiers.remove(index);
 			if(old_mods.length > 0) {
-				List children = headerMap.get(checked_foodname);
+				List children = headerMap.get(checked_parent);
 				if(!children.get(childIndex).toString().startsWith("\u2713 ")) {
 					for(int i=0;i<children.size();i++) {
 						if (children.get(i).toString().startsWith("\u2713 ")) {
 							children.set(i, children.get(i).toString().substring(2));
-		}
-		}
-					buildingMeal.modifiers.add(new String[]{modifier});
-					headerMap.get(checked_foodname).set(childIndex, "\u2713 " + modifier);
+						}
+					}
+					buildingMeal.modifiers.add(new String[]{child});
+					headerMap.get(checked_parent).set(childIndex, "\u2713 " + child);
 					return;
 				} else {
 					headerMap.put(old_foodname, children);
 					headerMap.get(old_foodname).set(childIndex, old_mods[0]);
-		}
+				}
 			}
-			headers.set(groupIndex, old_foodname);
-			headerMap.remove(checked_foodname);
+			headers.set(groupIndex, old_parent);
+			headerMap.remove(checked_parent);
 			buildingMeal.foods.remove(index);
 		} else {
 			String new_foodname = "\u2713 " + foodname;
@@ -206,6 +285,22 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			headerMap.remove(foodname);
 			buildingMeal.foods.add(foodname);
 		}
+	}*/
+
+	/*List<String> toList(String[] s) {
+		List<String> newList = new ArrayList<>(s.length);
+		for(int i=0;i<s.length;i++) {
+			newList.add(s[i]);
+		}
+		return newList;
+	}*/
+
+	String[] findModifiers(String header) {
+		header.replace("\u2713 ", "");
+		if(modifiersMap.containsKey(header)) {
+			return modifiersMap.get(header);
+		}
+		return null;
 	}
 
 	// Setting different listeners to expandablelistview
@@ -217,11 +312,21 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			@Override
 			public boolean onGroupClick(ExpandableListView listview, View view,
 										int group_pos, long id) {
-				String foodname = adapter.getGroup(group_pos).toString();
+				String parent = adapter.getGroup(group_pos).toString();
+				String[] mods = findModifiers(parent);
 
-				if (adapter.getChildrenCount(group_pos) <= 0) {
+				if(mods != null && mods.length > 0) {
+					makeAlert("Select the size", parent, mods, group_pos, 0);
+				} else if (adapter.getChildrenCount(group_pos) <= 0) {
 					//no children
-					markOrUnmarkElement(foodname, null, group_pos, -1);
+					//markOrUnmarkElement(parent, null, group_pos, -1);
+					if (isChecked(parent)) {
+						uncheckmarkElement(group_pos, -1);
+						removeMealItem(parent, null);
+					} else {
+						checkmarkElement(group_pos, -1);
+						addMealItem(parent, null);
+					}
 				}
 
 				return false;
@@ -254,11 +359,27 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			public boolean onChildClick(ExpandableListView listview, View view,
 										int groupPos, int childPos, long id) {
 
-				String foodname = adapter.getGroup(groupPos).toString();
-				String modifier = adapter.getChild(groupPos, childPos).toString();
-				markOrUnmarkElement(foodname, modifier, groupPos, childPos);
-				suggestList.collapseGroup(groupPos); //without this, the list will not update correctly
-				suggestList.expandGroup(groupPos);   //needed for redraw
+				String parent = adapter.getGroup(groupPos).toString();
+				String child = adapter.getChild(groupPos, childPos).toString();
+
+				String[] mods = findModifiers(child);
+
+				if (mods != null && mods.length > 0) {
+					makeAlert("Select a size", child, mods, groupPos, childPos);
+				} else {
+					if (isChecked(parent) && isChecked(child)) {
+						uncheckmarkElement(groupPos, childPos);
+						removeMealItem(parent, child);
+					} else {
+						checkmarkElement(groupPos, childPos);
+						addMealItem(parent, child);
+					}
+				}
+				forceUpdate(groupPos);
+
+
+
+				/*markOrUnmarkElement(parent, child, groupPos, childPos);*/
 
 				return false;
 			}
@@ -286,6 +407,18 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 		ServerQuery.menu = ms;
 
+		for(int i=0;i<Math.min(5,UserPreferences.userHistory.size());i++) {
+			MealEntry m = UserPreferences.userHistory.get(i);
+			String header = m.toString();
+			ArrayList<String> mods = new ArrayList<>();
+			for(int j=0;j<m.foods.size();j++) {
+				mods.add(m.foods.get(j));
+				modifiersMap.put(m.foods.get(j), m.modifiers.get(j));
+			}
+			headers.add(header);
+			headerMap.put(header, mods);
+		}
+
 		for(MealEntry m : ms) {
 			if(m.foods.size() > 0) {
 				String header = m.foods.get(0) /*+ " (" + m.value + ")"*/;
@@ -296,11 +429,13 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 						mods.add(s2);
 					}
 				}
-				headerMap.put(header, mods);
+				//headerMap.put(header, mods);
+				String[] sMods = mods.toArray(new String[mods.size()]);
+				modifiersMap.put(header, sMods);
 			}
 		}
 
-		try {
+		/*try {
 			ArrayList<MealEntry> combined = new ArrayList<>();
 			MealEntry[] userHistory = UserPreferences.userHistory.toArray(new MealEntry[UserPreferences.userHistory.size()]);
 			userHistory = UserPreferences.userPreference(userHistory, curLoc, new Date());
@@ -316,9 +451,10 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			}
 			MealEntry[] sortedMes = combined.toArray(new MealEntry[combined.size()]);
 			sortedMes = UserPreferences.userPreference(sortedMes, curLoc, new Date());
+
 		} catch (Exception e) {
 			Log.d("UPREF", "Exception in UPREF: " + e.toString());
-		}
+		}*/
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -334,13 +470,16 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		Log.d("SERVCOMM", "locValues set: " + ms.size() + " items");
 	}
 
-	private void makeAlert(boolean canDismiss, String title, String[] choices) {
+	private void makeAlert(String title, final String foodname, final String[] choices, final int groupIndex, final int childIndex) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
 		builder.setTitle(title);
 		builder.setItems(choices, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-
+				//markOrUnmarkElement(foodname, choices[which], groupIndex, childIndex);
+				checkmarkElement(groupIndex, childIndex);
+				addMealItem(foodname, choices[which]);
+				forceUpdate(groupIndex);
 			}
 		});
 
