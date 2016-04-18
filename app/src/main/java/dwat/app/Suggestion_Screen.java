@@ -74,9 +74,6 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		return false;
 	}
 
-	private String getCurDate() {
-		Calendar c = Calendar.getInstance();
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);

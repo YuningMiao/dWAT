@@ -36,7 +36,7 @@ public class History_Screen extends Activity {
         screen.setOnTouchListener(new OnSwipeTouchListener(History_Screen.this) {
             public void onSwipeLeft() {
                 Intent intent = new Intent(History_Screen.this, Suggestion_Screen.class);
-                intent.putExtra("location", hist.getLocName());
+                intent.putExtra("location", meal.location);
                 intent.putExtra("time", time);
                 startActivity(intent);
             }
@@ -68,7 +68,7 @@ public class History_Screen extends Activity {
             @Override
             public void onClick(View v) {
                 Intent backIntent = new Intent(History_Screen.this, Suggestion_Screen.class);
-                backIntent.putExtra("location", hist.getLocName());
+                backIntent.putExtra("location", meal.location);
                 backIntent.putExtra("time", time);
                 startActivity(backIntent);
             }
