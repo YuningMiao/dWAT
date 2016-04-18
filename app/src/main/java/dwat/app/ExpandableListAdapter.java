@@ -2,6 +2,7 @@ package dwat.app;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,11 +42,13 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 //    }
 
     @Override
-    public Object getChild(int groupPosition, int childPosititon) {
-
-        // This will return the child
-        return this.child.get(this.header.get(groupPosition)).get(
-                childPosititon);
+    public Object getChild(int groupPosition, int childPosition) {
+        if(groupPosition >= 0 && groupPosition < header.size() && child.containsKey(header.get(groupPosition)) && childPosition >= 0 && childPosition < child.size()) {
+            // This will return the child
+            return this.child.get(this.header.get(groupPosition)).get(
+                    childPosition);
+        }
+        return null;
     }
 
     @Override
@@ -75,9 +78,11 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildrenCount(int groupPosition) {
-
-        // return children count
-        return this.child.get(this.header.get(groupPosition)).size();
+        if(groupPosition >= 0 && groupPosition < this.header.size() && this.child.containsKey(this.header.get(groupPosition))) {
+            // return children count
+            return this.child.get(this.header.get(groupPosition)).size();
+        }
+        return 0;
     }
 
     @Override

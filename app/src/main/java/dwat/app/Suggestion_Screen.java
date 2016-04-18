@@ -5,8 +5,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.DataSetObserver;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -14,14 +12,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -33,62 +27,37 @@ import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
-import org.apache.commons.lang3.ArrayUtils;
-
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Serializable;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ExpandableListView.OnGroupExpandListener;
 
 public class Suggestion_Screen extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks{
 	private static final String TODO = "";
-	String curDate;
 	String curLoc;
 
 	private static ExpandableListView suggestList;
 	private static ExpandableListAdapter adapter;
-	List listTitle;
-	HashMap<String, List<String>> listDetail;
-//	private ExpandableListAdapter adapter;
 
 	RelativeLayout screen;
-	/*ArrayList<MealEntry> userHistory = new ArrayList<>();
-	MealEntry[] menu;
-	MealEntry[] mealEntries;*/
-    ArrayList<String> locValues = new ArrayList<String>(/*Arrays.asList("Food based on loc 1", "Food based on loc 2", "Food based on loc 3", "Food based on loc 4", "Food based on loc 5")*/);
-	ArrayAdapter<String> locationAdapter;
 	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
-	Intent mealHistIntent;
 
+	final ArrayList<String> headers = new ArrayList<>();
+	HashMap<String, List<String>> headerMap = new HashMap<String, List<String>>();
 
-	private String getCurDate() {
-		Calendar c = Calendar.getInstance();
-
-		curDate = c.get(Calendar.MONTH) + 1 + "-" + c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.YEAR) + " ";
-		curDate += c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
-		return curDate;
-	}
-
-	private String getCurLocation() {
-		if(curLoc == null || curLoc == "")
-			return null;
-		else
-			return curLoc;
-	}
+	MealEntry buildingMeal = new MealEntry();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -111,6 +80,9 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		screen.setOnTouchListener(new OnSwipeTouchListener(Suggestion_Screen.this) {
 			public void onSwipeRight() {
 				Intent intent = new Intent(Suggestion_Screen.this, History_Screen.class);
+				buildingMeal.date = new Date();
+				buildingMeal.location = curLoc;
+				intent.putExtra("meal", buildingMeal);
 				startActivity(intent);
 			}
 
@@ -123,28 +95,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 		suggestList = (ExpandableListView) findViewById(R.id.suggestList);
 		suggestList.setGroupIndicator(null);
-
-		setItems();
 		setListener();
-
-//		locationAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, locValues);
-//		suggestList = (ExpandableListView) findViewById(R.id.suggestList);
-//		suggestList.setAdapter((ExpandableListAdapter)locationAdapter);
-//		suggestList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//			@Override
-//			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//				History newMeal;
-//				if (getCurLocation() == null) {
-//					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
-//				} else
-//					newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
-//				Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
-//
-//				Intent intent = new Intent(Suggestion_Screen.this, History_Screen.class);
-//				intent.putExtra("meal", newMeal);
-//				startActivity(intent);
-//			}
-//		});
 
 		ImageButton cameraButton = (ImageButton) findViewById(R.id.cameraButton);
 		cameraButton.setOnClickListener(new View.OnClickListener() {
@@ -177,58 +128,46 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		new ReadMealEntries().execute(); //read old MealEntry items from userhist.dat
 	}
 
-	void setItems() {
-
-		// Array list for header
-		ArrayList<String> header = new ArrayList<String>();
-
-		// Array list for child items
-		List<String> child1 = new ArrayList<String>();
-		List<String> child2 = new ArrayList<String>();
-		List<String> child3 = new ArrayList<String>();
-		List<String> child4 = new ArrayList<String>();
-
-		// Hash map for both header and child
-		HashMap<String, List<String>> hashMap = new HashMap<String, List<String>>();
-
-		// Adding headers to list
-		for (int i = 1; i < 5; i++) {
-			header.add("Group " + i);
-
+	void markOrUnmarkElement(String foodname, String modifier, int groupIndex, int childIndex) {
+		if(foodname.startsWith("\u2713 ")) {
+			int index = buildingMeal.foods.indexOf(foodname.substring(2));
+			String old_foodname = buildingMeal.foods.get(index);
+			String checked_foodname = headers.get(groupIndex);
+			String[] old_mods = buildingMeal.modifiers.get(index);
+			buildingMeal.modifiers.remove(index);
+			if(old_mods.length > 0) {
+				List children = headerMap.get(checked_foodname);
+				if(!children.get(childIndex).toString().startsWith("\u2713 ")) {
+					for(int i=0;i<children.size();i++) {
+						if (children.get(i).toString().startsWith("\u2713 ")) {
+							children.set(i, children.get(i).toString().substring(2));
+						}
+					}
+					buildingMeal.modifiers.add(new String[]{modifier});
+					headerMap.get(checked_foodname).set(childIndex, "\u2713 " + modifier);
+					return;
+				} else {
+					headerMap.put(old_foodname, children);
+					headerMap.get(old_foodname).set(childIndex, old_mods[0]);
+				}
+			}
+			headers.set(groupIndex, old_foodname);
+			headerMap.remove(checked_foodname);
+			buildingMeal.foods.remove(index);
+		} else {
+			String new_foodname = "\u2713 " + foodname;
+			if (modifier == null) {
+				buildingMeal.modifiers.add(new String[0]);
+			} else {
+				buildingMeal.modifiers.add(new String[]{modifier});
+				List children = headerMap.get(foodname);
+				headerMap.put(new_foodname, children);
+				headerMap.get(new_foodname).set(childIndex, "\u2713 " + modifier);
+			}
+			headers.set(groupIndex, new_foodname);
+			headerMap.remove(foodname);
+			buildingMeal.foods.add(foodname);
 		}
-		// Adding child data
-		for (int i = 1; i < 5; i++) {
-			child1.add("Group 1  - " + " : Child" + i);
-
-		}
-		// Adding child data
-		for (int i = 1; i < 5; i++) {
-			child2.add("Group 2  - " + " : Child" + i);
-
-		}
-		// Adding child data
-		for (int i = 1; i < 6; i++) {
-			child3.add("Group 3  - " + " : Child" + i);
-
-		}
-		// Adding child data
-//		for (int i = 1; i < 7; i++) {
-//			child4.add("Group 4  - " + " : Child" + i);
-//
-//		}
-
-		// Adding header and childs to hash map
-		hashMap.put(header.get(0), child1);
-		hashMap.put(header.get(1), child2);
-		hashMap.put(header.get(2), child3);
-		hashMap.put(header.get(3), child4);
-
-		adapter = new dwat.app.ExpandableListAdapter(Suggestion_Screen.this, header, hashMap);
-
-		// Setting adpater over expandablelistview
-		suggestList.setAdapter(adapter);
-		Log.e("TAG", "got to here");
-		Toast.makeText(Suggestion_Screen.this, "hello", Toast.LENGTH_LONG).show();
 	}
 
 	// Setting different listeners to expandablelistview
@@ -240,10 +179,13 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			@Override
 			public boolean onGroupClick(ExpandableListView listview, View view,
 										int group_pos, long id) {
+				String foodname = adapter.getGroup(group_pos).toString();
 
-				Toast.makeText(Suggestion_Screen.this,
-						"You clicked : " + adapter.getGroup(group_pos),
-						Toast.LENGTH_SHORT).show();
+				if (adapter.getChildrenCount(group_pos) <= 0) {
+					//no children
+					markOrUnmarkElement(foodname, null, group_pos, -1);
+				}
+
 				return false;
 			}
 		});
@@ -273,10 +215,13 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			@Override
 			public boolean onChildClick(ExpandableListView listview, View view,
 										int groupPos, int childPos, long id) {
-				Toast.makeText(
-						Suggestion_Screen.this,
-						"You clicked : " + adapter.getChild(groupPos, childPos),
-						Toast.LENGTH_SHORT).show();
+
+				String foodname = adapter.getGroup(groupPos).toString();
+				String modifier = adapter.getChild(groupPos, childPos).toString();
+				markOrUnmarkElement(foodname, modifier, groupPos, childPos);
+				suggestList.collapseGroup(groupPos); //without this, the list will not update correctly
+				suggestList.expandGroup(groupPos);   //needed for redraw
+
 				return false;
 			}
 		});
@@ -285,13 +230,13 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 	public void updateLocValues(final ServerQuery.FoodDescription[] newVals) {
 		final ArrayList<MealEntry> ms = new ArrayList<>();
+		headers.clear();
 		for (int i=0;i<newVals.length;i++) {
 			MealEntry m = new MealEntry(curLoc, new Date(), newVals[i]);
 			boolean found = false;
 			for(int j=0;j<ms.size();j++) {
 				if(m.foods.size() > 0 && ms.get(j).foods.contains(m.foods.get(0))) {
-					ms.get(j).modifiers.add(newVals[i].Modifiers);
-					ms.get(j).badmodifiers.add(newVals[i].BadModifiers);
+					ms.get(j).addModifiers(newVals[i].Modifiers, newVals[i].BadModifiers);
 					found = true;
 					break;
 				}
@@ -301,12 +246,29 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			}
 		}
 
-		ServerQuery.menu = ms.toArray(new MealEntry[ms.size()]);
+		ServerQuery.menu = ms;
+
+		for(MealEntry m : ms) {
+			if(m.foods.size() > 0) {
+				String header = m.foods.get(0) /*+ " (" + m.value + ")"*/;
+				headers.add(header);
+				ArrayList<String> mods = new ArrayList<String>();
+				for(String[] s : m.modifiers) {
+					for(String s2 : s) {
+						mods.add(s2);
+					}
+				}
+				headerMap.put(header, mods);
+			}
+		}
+
 		try {
 			ArrayList<MealEntry> combined = new ArrayList<>();
-			for(MealEntry m : UserPreferences.userHistory) {
-				if(m != null) {
-					combined.add(m);
+			MealEntry[] userHistory = UserPreferences.userHistory.toArray(new MealEntry[UserPreferences.userHistory.size()]);
+			userHistory = UserPreferences.userPreference(userHistory, curLoc, new Date());
+			for(int i=0;i<Math.min(5,userHistory.length);i++) {
+				if(userHistory[i] != null) {
+					combined.add(userHistory[i]);
 				}
 			}
 			for(MealEntry m : ServerQuery.menu) {
@@ -316,20 +278,16 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			}
 			MealEntry[] sortedMes = combined.toArray(new MealEntry[combined.size()]);
 			sortedMes = UserPreferences.userPreference(sortedMes, curLoc, new Date());
-		} catch(Exception e) { Log.d("UPREF", "Exception in UPREF: " + e.toString()); }
+		} catch (Exception e) {
+			Log.d("UPREF", "Exception in UPREF: " + e.toString());
+		}
 
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					locationAdapter.clear();
-					for (int i = 0; i < ms.size(); i++) {
-						for (String s : ms.get(i).foods) {
-							locationAdapter.add(s + " (value=" + ms.get(i).value + ")");
-							//locationAdapter.getCount()-1 = current index
-						}
-					}
-					locationAdapter.notifyDataSetChanged();
+					adapter = new dwat.app.ExpandableListAdapter(Suggestion_Screen.this, headers, headerMap);
+					suggestList.setAdapter(adapter);
 				} catch (Exception e) {
 					Log.d("SERVCOMM", "Exception: " + e.toString());
 				}
@@ -369,12 +327,12 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	}
 
 	private void guessCurrentPlace() {
-		PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace( mGoogleApiClient, null );
+		PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mGoogleApiClient, null);
 		result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
 			@Override
 			public void onResult(PlaceLikelihoodBuffer likelyPlaces) {
 				if (!likelyPlaces.getStatus().isSuccess()) {
-					Log.e("TAG", "Place query didn't complete. Error: " + likelyPlaces.getStatus().toString());
+					Log.e("GEO", "Place query didn't complete. Error: " + likelyPlaces.getStatus().toString());
 					likelyPlaces.release();
 					return;
 				}
@@ -383,7 +341,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 
 					PlaceLikelihood placeLikelihood;
 					String value;
-					for(int i = 0; i < 5; i++){
+					for (int i = 0; i < 5; i++) {
 						placeLikelihood = likelyPlaces.get(i);
 						value = placeLikelihood.getPlace().getName().toString() + " ";
 						value += String.format("%.1f", placeLikelihood.getLikelihood() * 100);
@@ -418,7 +376,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					alert.show();
 
 				} catch (IllegalStateException e) {
-					Log.w("TAG", "Fail to get place or its coordinates");
+					Log.w("GEO", "Fail to get place or its coordinates");
 				}
 
 				likelyPlaces.release();
@@ -462,37 +420,38 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	}
 
 	public class ReadMealEntries extends AsyncTask<Object, String, Object> {
+		static final int maxCount = 1000;
 		protected Object doInBackground(Object... o) {
-			int count = 0;
-			final int maxCount = 1000;
-			FileReader fr = null;
+			ObjectInputStream in = null;
+			ArrayList<MealEntry> meals = null;
 			try {
 				File f = new File(getExternalFilesDir(null), "userhist.dat");
-				f.delete();
+				//f.delete();
 				f.createNewFile();
 				Log.d("UPREF", f.getAbsolutePath());
-				fr = new FileReader(f);
-				count = fr.read();
-				Log.d("UPREF", "Count=" + count);
-				if(count > 0) {
-					for(int i=0;i<count;i++) {
-						UserPreferences.userHistory[i%maxCount] = MealEntry.Deserialize(fr);
-						Log.d("UPREF", UserPreferences.userHistory[i].toString());
-					}
+				in = new ObjectInputStream(new FileInputStream(f));
+				Object obj;
+				meals = new ArrayList<>();
+				while((obj=in.readObject()) != null) {
+					MealEntry m = (MealEntry)obj;
+					Log.d("UPREF", m.toString());
+					meals.add(m);
 				}
+			} catch(EOFException e) {
+				//end of file
 			} catch(IOException e) {
 				Log.d("UPREF", e.toString());
 			} catch(Exception e) {
 				Log.d("UPREF", e.toString());
 			} finally {
-				/*Intent menuIntent = new Intent(Suggestion_Screen.this, History_Screen.class);
-				menuIntent.putExtra("mealEntries", mealEntries);
-				startActivity(menuIntent);*/
 				try {
-					fr.close();
-				} catch (IOException e) {}
+					in.close();
+				} catch (IOException | NullPointerException e) {}
 			}
-			Log.d("UPREF", "MealEntries deserialized: " + count + " objects read");
+			if(meals != null) {
+				UserPreferences.userHistory = meals;
+			}
+			Log.d("UPREF", "MealEntries deserialized: " + UserPreferences.userHistory.size() + " objects read");
 
 			return null;
 		}

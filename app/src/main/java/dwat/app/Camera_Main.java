@@ -218,14 +218,17 @@ public class Camera_Main extends FragmentActivity {
 
             tags.clear();
             for(int i = 0; i < results.size(); i++){
-                tags.add(results.get(i));
+                boolean found = false;
+                for(MealEntry m : ServerQuery.menu) {
+                    if(m.foods.contains(results.get(i))) {
+                        found = true;
+                        break;
+                    }
+                }
+                if(found) {
+                    tags.add(results.get(i));
+                }
             }
-//            if(results.size() > 19) {
-//                tags.add(results.get(0));
-//                tags.add(results.get(1));
-//                tags.add(results.get(2));
-//                tags.add(results.get(3));
-//            }
             tagAdapter.notifyDataSetChanged();
             f.delete();
         }

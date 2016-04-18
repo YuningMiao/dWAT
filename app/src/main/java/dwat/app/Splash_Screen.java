@@ -8,7 +8,7 @@ import android.view.Window;
 
 public class Splash_Screen extends Activity{
 
-    private static int SPLASH_TIME = 3000;
+    private static int SPLASH_TIME = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

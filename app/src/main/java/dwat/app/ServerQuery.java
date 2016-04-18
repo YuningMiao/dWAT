@@ -14,9 +14,10 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class ServerQuery {
-    public static MealEntry[] menu = null;
+    public static ArrayList<MealEntry> menu = null;
 
     public class FoodDescription {
         public String FoodManf;

@@ -2,42 +2,28 @@ package dwat.app;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
-import java.security.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 
 public class History_Screen extends Activity {
-//    Location latitude;
-//    Location longitude;
-//    SimpleDateFormat date;
-//    public History_Screen(){
-//        date = new SimpleDateFormat("yyyy-MM-dd H:mm:ss");
-//    }
     ListView history;
-    ArrayList<String> histValues = new ArrayList<String>(/*Arrays.asList("Meal 1", "Meal 2", "Meal 3", "Meal 4", "Meal 5")*/);
+    ArrayList<String> histValues = new ArrayList<>();
     ArrayAdapter<String> histAdpt;
-    History hist;
+    MealEntry meal;
     RelativeLayout screen;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,17 +39,24 @@ public class History_Screen extends Activity {
             }
         });
 
-        UserPreferences up = new UserPreferences();
-
         history = (ListView) findViewById(R.id.histList);
-        hist = (History) getIntent().getSerializableExtra("meal");
-        if(hist != null && !hist.getHist().isEmpty() && hist.getHist().length() > 0) {
-            //histValues.add(hist.getHist());
+        meal = (MealEntry) getIntent().getSerializableExtra("meal");
+        if(meal != null && meal.location != null && meal.foods.size() > 0) {
             ServerQuery sq = new ServerQuery();
-            sq.RequestFoodDescription(hist.getLocName(), hist.getMealName(), this);
+            sq.RequestFoodDescription(meal.location, meal.foods.get(0), this);
         }
 
-        histAdpt = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, histValues);
+        int count = 0;
+        for(int i=UserPreferences.userHistory.size()-1;i>=0;i--) {
+            if(UserPreferences.userHistory.get(i) != null && count < 10) {
+                histValues.add(UserPreferences.userHistory.get(i).toString());
+                count ++;
+            } else {
+                break;
+            }
+        }
+
+        histAdpt = new ArrayAdapter<>(this, R.layout.activity_listview, R.id.textView, histValues);
 
         history.setAdapter(histAdpt);
 
@@ -75,11 +68,14 @@ public class History_Screen extends Activity {
                 startActivity(backIntent);
             }
         });
+
+        new WriteMealEntries().execute(meal);
     }
 
     public void updateFoodDescValues(ServerQuery.FoodDescription fd) {
         if(fd == null) return;
 
+        String foodDesc = "";
         for (Field field : fd.getClass().getDeclaredFields()) {
             field.setAccessible(true); // You might want to set modifier to public first.
             Object value = null;
@@ -97,11 +93,24 @@ public class History_Screen extends Activity {
                     case "BadModifiers":
                         break;
                     default:
-                        histValues.add(field.getName() + ": " + value);
+                        foodDesc += field.getName() + ": " + value + "\n";
                         break;
                 }
             }
         }
+
+        histValues.clear();
+        histValues.add(foodDesc);
+        int count = 0;
+        for(int i=UserPreferences.userHistory.size()-1;i>=0;i--) {
+            if(UserPreferences.userHistory.get(i) != null && count < 10) {
+                histValues.add(UserPreferences.userHistory.get(i).toString());
+                count ++;
+            } else {
+                break;
+            }
+        }
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -112,10 +121,6 @@ public class History_Screen extends Activity {
                 }
             }
         });
-
-        MealEntry m = new MealEntry("Current Location Here", new Date(), fd);
-
-        new WriteMealEntries().execute((Object) (m));
     }
 
     @Override
@@ -126,33 +131,30 @@ public class History_Screen extends Activity {
         protected Object doInBackground(Object... o) {
             int count = o.length;
             if(count > 0 && o[0] != null && o[0] instanceof MealEntry) {
-                FileWriter fw = null;
-                MealEntry[] mealEntries = (MealEntry[]) getIntent().getSerializableExtra("mealEntries");
-                MealEntry m = (MealEntry) o[0];
-                if(mealEntries == null) { Log.d("UPREF", "Meal Entries null in WriteMealEntries"); }
-                int newCount = mealEntries == null ? 1 : mealEntries.length + 1;
+                ObjectOutputStream out = null;
+                MealEntry meal = (MealEntry) o[0];
+                int newCount = 0;
                 try {
                     File f = new File(getExternalFilesDir(null), "userhist.dat");
                     f.createNewFile();
+                    out = new ObjectOutputStream(new FileOutputStream(f));
                     Log.d("UPREF", f.getAbsolutePath());
-                    fw = new FileWriter(f, false);
-                    fw.write(newCount);
-                    if(mealEntries != null) {
-                        for(MealEntry me : mealEntries) {
-                            me.Serialize(fw);
-                        }
+                    for(int i=0;i<UserPreferences.userHistory.size();i++) {
+                        out.writeObject(UserPreferences.userHistory.get(i));
+                        out.flush();
+                        newCount++;
                     }
-                    m.Serialize(fw);
-                    fw.flush();
-                    fw.close();
+                    if(meal.foods.size() > 0) {
+                        out.writeObject(meal);
+                        out.flush();
+                        newCount++;
+                    }
                 } catch(IOException e) {
                     Log.d("UPREF", e.toString());
-                } /*catch(Exception e) {
-                    Log.d("UPREF", e.toString());
-                } */finally {
+                } finally {
                     try {
-                        fw.close();
-                    } catch (IOException e) {}
+                        out.close();
+                    } catch (IOException e) { Log.d("UPREF", "Failed to close FileWriter"); }
                 }
                 Log.d("UPREF", "MealEntry serialized " + newCount + " objects");
             }
