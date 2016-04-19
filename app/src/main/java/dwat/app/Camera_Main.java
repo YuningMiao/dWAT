@@ -291,8 +291,9 @@ public class Camera_Main extends FragmentActivity {
             VisualClassifier vc5 = new VisualClassifier("BeefandCheddar_847972216");
             VisualClassifier vc6 = new VisualClassifier("CurlyFries_456201371");
             VisualClassifier vc7 = new VisualClassifier("RoastBeef_1621569146");
-            //VisualClassifier vc8 = new VisualClassifier("RoastBeef_1621569146");
-            result = service.classify(image, vc1, vc2, vc3, vc4, vc5, vc6, vc7);
+            VisualClassifier vc8 = new VisualClassifier("McNuggets_897931682");
+            //VisualClassifier vc9= new VisualClassifier("McNuggets_897931682");
+            result = service.classify(image, vc1, vc2, vc3, vc4, vc5, vc6, vc7, vc8);
             //result = service.classify(image);
             String result1 = result.toString();
             Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");

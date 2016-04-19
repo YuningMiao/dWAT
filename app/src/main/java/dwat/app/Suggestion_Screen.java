@@ -538,25 +538,28 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 					if(curLoc == null || refresh == true || check5Minutes() == true){
 						Log.e("TAG", locs.get(0));
 						Log.e("TAG", "got to here");
-					AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
-					builder.setTitle("Select your location");
-					builder.setItems(cs, new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							//locValues.add("Meal based on " + locs.get(which));
-							//locationAdapter.notifyDataSetChanged();
-							curLoc = locs.get(which);
+						AlertDialog.Builder builder = new AlertDialog.Builder(Suggestion_Screen.this);
+						builder.setTitle("Select your location");
+						builder.setItems(cs, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								//locValues.add("Meal based on " + locs.get(which));
+								//locationAdapter.notifyDataSetChanged();
+								curLoc = locs.get(which);
 
-							ServerQuery sq = new ServerQuery();
-							sq.RequestMenu(curLoc, Suggestion_Screen.this);
+								ServerQuery sq = new ServerQuery();
+								sq.RequestMenu(curLoc, Suggestion_Screen.this);
 
-							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
-						}
-					});
+								Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
+							}
+						});
 
-					AlertDialog alert = builder.create();
-					alert.setCanceledOnTouchOutside(false);
-					alert.show();
+						AlertDialog alert = builder.create();
+						alert.setCanceledOnTouchOutside(false);
+						alert.show();
+					}
+					else{
+						new ServerQuery().RequestMenu(curLoc, Suggestion_Screen.this);
 					}
 
 				} catch (IllegalStateException e) {
