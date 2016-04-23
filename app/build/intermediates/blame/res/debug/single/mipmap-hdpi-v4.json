@@ -1,5 +1,9 @@
 [
     {
+        "merged": "C:\\Users\\Allison\\Downloads\\dWATVS\\app\\build\\intermediates\\res\\merged\\debug\\mipmap-hdpi-v4\\ic_launcher.png",
+        "source": "C:\\Users\\Allison\\Downloads\\dWATVS\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher.png"
+    },
+    {
         "merged": "C:\\Users\\beetl\\StudioProjects\\dWAT1\\app\\build\\intermediates\\res\\merged\\debug\\mipmap-hdpi-v4\\ic_launcher.png",
         "source": "C:\\Users\\beetl\\StudioProjects\\dWAT1\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher.png"
     }
