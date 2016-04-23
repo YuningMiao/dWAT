@@ -14,18 +14,8 @@
         android:layout_marginLeft="16dp"
         android:layout_marginTop="21dp"/>
 
-    <ListView
+    <ExpandableListView
         android:id="@+id/suggestList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_below="@+id/suggestText"
-        android:layout_marginBottom="70dp"
-        android:layout_toRightOf="@+id/swipeRight"
-        android:layout_toLeftOf="@+id/swipeLeft"/>
-
-    <ListView
-        android:id="@+id/menuList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"

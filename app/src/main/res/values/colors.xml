@@ -6,5 +6,4 @@
     <color name="dwatBlue">#5297eb</color>
     <color name="dwatGreen">#00de64</color>
     <color name="dwatGrey">#787878</color>
-    <color name="tab_indicator">@color/dwatGreen</color>
 </resources>

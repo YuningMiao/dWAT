@@ -16,7 +16,6 @@ import android.view.Window;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -49,16 +48,16 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	long timeFromOther;
 	long timeNow;
 
-	ListView suggestList;
-//	private static ExpandableListAdapter adapter;
+	private static ExpandableListView suggestList;
+	private static ExpandableListAdapter adapter;
 
 	RelativeLayout screen;
 	ArrayList<String> locs;
 	private GoogleApiClient mGoogleApiClient;
 
-//	final ArrayList<String> headers = new ArrayList<>();
-//	HashMap<String, List<String>> headerMap = new HashMap<>();
-//	HashMap<String, String[]> modifiersMap = new HashMap<>();
+	final ArrayList<String> headers = new ArrayList<>();
+	HashMap<String, List<String>> headerMap = new HashMap<>();
+	HashMap<String, String[]> modifiersMap = new HashMap<>();
 
 	MealEntry buildingMeal = new MealEntry();
 
@@ -97,7 +96,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 //			if(extras.containsKey("time"))
 //				timeFromOther = extras.getLong("time");
 //			Log.e("TAG", timeNow + " now ");
-//			Log.e("TAG", timeFromOther + " other");
+			Log.e("TAG", timeFromOther + " other");
 		//}
 
 		mGoogleApiClient = new GoogleApiClient
@@ -130,10 +129,9 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			}
 		});
 
-		suggestList = (ListView) findViewById(R.id.suggestList);
-//		suggestList = (ListView) findViewById(R.id.suggestList);
-//		suggestList.setGroupIndicator(null);
-//		setListener();
+		suggestList = (ExpandableListView) findViewById(R.id.suggestList);
+		suggestList.setGroupIndicator(null);
+		setListener();
 
 		ImageButton cameraButton = (ImageButton) findViewById(R.id.cameraButton);
 		cameraButton.setOnClickListener(new View.OnClickListener() {
@@ -168,10 +166,10 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		new ReadMealEntries().execute(); //read old MealEntry items from userhist.dat
 	}
 
-//	void forceUpdate(int groupIndex) {
-//		suggestList.collapseGroup(groupIndex); //without this, the list will not update correctly
-//		suggestList.expandGroup(groupIndex);   //needed for redraw
-//	}
+	void forceUpdate(int groupIndex) {
+		suggestList.collapseGroup(groupIndex); //without this, the list will not update correctly
+		suggestList.expandGroup(groupIndex);   //needed for redraw
+	}
 
 	boolean isChecked(String s) {
 		return s != null && s.startsWith("\u2713 ");
@@ -197,50 +195,50 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 	}
 
 	//checkmark an element if not checkmarked
-//	void checkmarkElement(int groupIndex, int childIndex) {
-//		String parent = headers.get(groupIndex);
-//		String new_parent = "\u2713 " + parent;
-//		if(!parent.startsWith("\u2713 ")) {
-//			headers.set(groupIndex, new_parent);
-//		}
-//		if(headerMap.get(parent) != null && headerMap.get(parent).size() > 0 && childIndex >= 0) {
-//			String child = headerMap.get(parent).get(childIndex);
-//			if(!child.startsWith("\u2713 ")) {
-//				List children = headerMap.get(parent);
-//				headerMap.put(new_parent, children);
-//				headerMap.get(new_parent).set(childIndex, "\u2713 " + child);
-//				headerMap.remove(parent);
-//			}
-//		}
-//	}
-//
-//	void uncheckmarkElement(int groupIndex, int childIndex) {
-//		String parent = headers.get(groupIndex);
-//		String new_parent = parent.substring(2);
-//		int numChildrenChecked = 0;
-//		boolean hasValidChild = headerMap.get(parent) != null && headerMap.get(parent).size() > 0 && childIndex >= 0;
-//		if(hasValidChild) {
-//			String child = headerMap.get(parent).get(childIndex);
-//			if(child.startsWith("\u2713 ")) {
-//				List<String> children = headerMap.get(parent);
-//				for(String s : children) {
-//					if(s.startsWith("\u2713 ")) {
-//						numChildrenChecked++;
-//					}
-//				}
-//				if(numChildrenChecked == 1) {
-//					headerMap.put(new_parent, children);
-//					headerMap.get(new_parent).set(childIndex, child.substring(2));
-//					headerMap.remove(parent);
-//				} else {
-//					headerMap.get(parent).set(childIndex, child.substring(2));
-//				}
-//			}
-//		}
-//		if(parent.startsWith("\u2713 ") && (numChildrenChecked == 1 || !hasValidChild)) {
-//			headers.set(groupIndex, new_parent);
-//		}
-//	}
+	void checkmarkElement(int groupIndex, int childIndex) {
+		String parent = headers.get(groupIndex);
+		String new_parent = "\u2713 " + parent;
+		if(!parent.startsWith("\u2713 ")) {
+			headers.set(groupIndex, new_parent);
+		}
+		if(headerMap.get(parent) != null && headerMap.get(parent).size() > 0 && childIndex >= 0) {
+			String child = headerMap.get(parent).get(childIndex);
+			if(!child.startsWith("\u2713 ")) {
+				List children = headerMap.get(parent);
+				headerMap.put(new_parent, children);
+				headerMap.get(new_parent).set(childIndex, "\u2713 " + child);
+				headerMap.remove(parent);
+			}
+		}
+	}
+
+	void uncheckmarkElement(int groupIndex, int childIndex) {
+		String parent = headers.get(groupIndex);
+		String new_parent = parent.substring(2);
+		int numChildrenChecked = 0;
+		boolean hasValidChild = headerMap.get(parent) != null && headerMap.get(parent).size() > 0 && childIndex >= 0;
+		if(hasValidChild) {
+			String child = headerMap.get(parent).get(childIndex);
+			if(child.startsWith("\u2713 ")) {
+				List<String> children = headerMap.get(parent);
+				for(String s : children) {
+					if(s.startsWith("\u2713 ")) {
+						numChildrenChecked++;
+					}
+				}
+				if(numChildrenChecked == 1) {
+					headerMap.put(new_parent, children);
+					headerMap.get(new_parent).set(childIndex, child.substring(2));
+					headerMap.remove(parent);
+				} else {
+					headerMap.get(parent).set(childIndex, child.substring(2));
+				}
+			}
+		}
+		if(parent.startsWith("\u2713 ") && (numChildrenChecked == 1 || !hasValidChild)) {
+			headers.set(groupIndex, new_parent);
+		}
+	}
 
 	void handleUpdate(int groupIndex, int childIndex) {
 
@@ -297,101 +295,101 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 		return newList;
 	}*/
 
-//	String[] findModifiers(String header) {
-//		header.replace("\u2713 ", "");
-//		if(modifiersMap.containsKey(header)) {
-//			return modifiersMap.get(header);
-//		}
-//		return null;
-//	}
+	String[] findModifiers(String header) {
+		header.replace("\u2713 ", "");
+		if(modifiersMap.containsKey(header)) {
+			return modifiersMap.get(header);
+		}
+		return null;
+	}
 
 	// Setting different listeners to expandablelistview
-//	void setListener() {
-//
-//		// This listener will show toast on group click
-//		suggestList.setOnGroupClickListener(new OnGroupClickListener() {
-//
-//			@Override
-//			public boolean onGroupClick(ExpandableListView listview, View view,
-//										int group_pos, long id) {
-//				String parent = adapter.getGroup(group_pos).toString();
-//				String[] mods = findModifiers(parent);
-//
-//				if(mods != null && mods.length > 0) {
-//					makeAlert("Select the size", parent, mods, group_pos, 0);
-//				} else if (adapter.getChildrenCount(group_pos) <= 0) {
-//					//no children
-//					//markOrUnmarkElement(parent, null, group_pos, -1);
-//					if (isChecked(parent)) {
-//						uncheckmarkElement(group_pos, -1);
-//						removeMealItem(parent, null);
-//					} else {
-//						checkmarkElement(group_pos, -1);
-//						addMealItem(parent, null);
-//					}
-//				}
-//
-//				return false;
-//			}
-//		});
-//
-//		// This listener will expand one group at one time
-//		// You can remove this listener for expanding all groups
-//		suggestList
-//				.setOnGroupExpandListener(new OnGroupExpandListener() {
-//
-//					// Default position
-//					int previousGroup = -1;
-//
-//					@Override
-//					public void onGroupExpand(int groupPosition) {
-//						if (groupPosition != previousGroup)
-//
-//							// Collapse the expanded group
-//							suggestList.collapseGroup(previousGroup);
-//						previousGroup = groupPosition;
-//					}
-//
-//				});
-//
-//		// This listener will show toast on child click
-//		suggestList.setOnChildClickListener(new OnChildClickListener() {
-//
-//			@Override
-//			public boolean onChildClick(ExpandableListView listview, View view,
-//										int groupPos, int childPos, long id) {
-//
-//				String parent = adapter.getGroup(groupPos).toString();
-//				String child = adapter.getChild(groupPos, childPos).toString();
-//
-//				String[] mods = findModifiers(child);
-//
-//				if (mods != null && mods.length > 0) {
-//					makeAlert("Select a size", child, mods, groupPos, childPos);
-//				} else {
-//					if (isChecked(parent) && isChecked(child)) {
-//						uncheckmarkElement(groupPos, childPos);
-//						removeMealItem(parent, child);
-//					} else {
-//						checkmarkElement(groupPos, childPos);
-//						addMealItem(parent, child);
-//					}
-//				}
-//				forceUpdate(groupPos);
-//
-//
-//
-//				/*markOrUnmarkElement(parent, child, groupPos, childPos);*/
-//
-//				return false;
-//			}
-//		});
-//	}
+	void setListener() {
+
+		// This listener will show toast on group click
+		suggestList.setOnGroupClickListener(new OnGroupClickListener() {
+
+			@Override
+			public boolean onGroupClick(ExpandableListView listview, View view,
+										int group_pos, long id) {
+				String parent = adapter.getGroup(group_pos).toString();
+				String[] mods = findModifiers(parent);
+
+				if(mods != null && mods.length > 0) {
+					makeAlert("Select the size", parent, mods, group_pos, 0);
+				} else if (adapter.getChildrenCount(group_pos) <= 0) {
+					//no children
+					//markOrUnmarkElement(parent, null, group_pos, -1);
+					if (isChecked(parent)) {
+						uncheckmarkElement(group_pos, -1);
+						removeMealItem(parent, null);
+					} else {
+						checkmarkElement(group_pos, -1);
+						addMealItem(parent, null);
+					}
+				}
+
+				return false;
+			}
+		});
+
+		// This listener will expand one group at one time
+		// You can remove this listener for expanding all groups
+		suggestList
+				.setOnGroupExpandListener(new OnGroupExpandListener() {
+
+					// Default position
+					int previousGroup = -1;
+
+					@Override
+					public void onGroupExpand(int groupPosition) {
+						if (groupPosition != previousGroup)
+
+							// Collapse the expanded group
+							suggestList.collapseGroup(previousGroup);
+						previousGroup = groupPosition;
+					}
+
+				});
+
+		// This listener will show toast on child click
+		suggestList.setOnChildClickListener(new OnChildClickListener() {
+
+			@Override
+			public boolean onChildClick(ExpandableListView listview, View view,
+										int groupPos, int childPos, long id) {
+
+				String parent = adapter.getGroup(groupPos).toString();
+				String child = adapter.getChild(groupPos, childPos).toString();
+
+				String[] mods = findModifiers(child);
+
+				if (mods != null && mods.length > 0) {
+					makeAlert("Select a size", child, mods, groupPos, childPos);
+				} else {
+					if (isChecked(parent) && isChecked(child)) {
+						uncheckmarkElement(groupPos, childPos);
+						removeMealItem(parent, child);
+					} else {
+						checkmarkElement(groupPos, childPos);
+						addMealItem(parent, child);
+					}
+				}
+				forceUpdate(groupPos);
+
+
+
+				/*markOrUnmarkElement(parent, child, groupPos, childPos);*/
+
+				return false;
+			}
+		});
+	}
 
 
 	public void updateLocValues(final ServerQuery.FoodDescription[] newVals) {
 		final ArrayList<MealEntry> ms = new ArrayList<>();
-//		headers.clear();
+		headers.clear();
 		for (int i=0;i<newVals.length;i++) {
 			MealEntry m = new MealEntry(curLoc, new Date(), newVals[i]);
 			boolean found = false;
@@ -415,16 +413,16 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			ArrayList<String> mods = new ArrayList<>();
 			for(int j=0;j<m.foods.size();j++) {
 				mods.add(m.foods.get(j));
-//				modifiersMap.put(m.foods.get(j), m.modifiers.get(j));
+				modifiersMap.put(m.foods.get(j), m.modifiers.get(j));
 			}
-//			headers.add(header);
-//			headerMap.put(header, mods);
+			headers.add(header);
+			headerMap.put(header, mods);
 		}
 
 		for(MealEntry m : ms) {
 			if(m.foods.size() > 0) {
 				String header = m.foods.get(0) /*+ " (" + m.value + ")"*/;
-//				headers.add(header);
+				headers.add(header);
 				ArrayList<String> mods = new ArrayList<String>();
 				for(String[] s : m.modifiers) {
 					for(String s2 : s) {
@@ -433,7 +431,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 				}
 				//headerMap.put(header, mods);
 				String[] sMods = mods.toArray(new String[mods.size()]);
-//				modifiersMap.put(header, sMods);
+				modifiersMap.put(header, sMods);
 			}
 		}
 
@@ -462,8 +460,8 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			@Override
 			public void run() {
 				try {
-//					adapter = new dwat.app.ExpandableListAdapter(Suggestion_Screen.this, headers, headerMap);
-//					suggestList.setAdapter(adapter);
+					adapter = new dwat.app.ExpandableListAdapter(Suggestion_Screen.this, headers, headerMap);
+					suggestList.setAdapter(adapter);
 				} catch (Exception e) {
 					Log.d("SERVCOMM", "Exception: " + e.toString());
 				}
@@ -479,9 +477,9 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				//markOrUnmarkElement(foodname, choices[which], groupIndex, childIndex);
-//				checkmarkElement(groupIndex, childIndex);
+				checkmarkElement(groupIndex, childIndex);
 				addMealItem(foodname, choices[which]);
-//				forceUpdate(groupIndex);
+				forceUpdate(groupIndex);
 			}
 		});
 
@@ -550,7 +548,7 @@ public class Suggestion_Screen extends AppCompatActivity implements GoogleApiCli
 							curLoc = locs.get(which);
 
 							ServerQuery sq = new ServerQuery();
-//							sq.RequestMenu(curLoc, Suggestion_Screen.this);
+							sq.RequestMenu(curLoc, Suggestion_Screen.this);
 
 							Toast.makeText(getApplicationContext(), locs.get(which), Toast.LENGTH_LONG).show();
 						}
