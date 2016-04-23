@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.ibm.watson.developer_cloud.visual_recognition.v2.VisualRecognition;
 import com.ibm.watson.developer_cloud.visual_recognition.v2.model.VisualClassification;
+import com.ibm.watson.developer_cloud.visual_recognition.v2.model.VisualClassifier;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -282,7 +283,16 @@ public class Camera_Main extends FragmentActivity {
                     break;
                 }
             }
-            result = service.classify(image);
+            VisualClassifier vc1 = new VisualClassifier("fries_179891096");
+            VisualClassifier vc2 = new VisualClassifier("filetofish_1528503474");
+            VisualClassifier vc3 = new VisualClassifier("hashbrown_220034101");
+            VisualClassifier vc4 = new VisualClassifier("BigMac_997392234");
+            VisualClassifier vc5 = new VisualClassifier("BeefandCheddar_847972216");
+            VisualClassifier vc6 = new VisualClassifier("CurlyFries_456201371");
+            VisualClassifier vc7 = new VisualClassifier("RoastBeef_1621569146");
+            VisualClassifier vc8 = new VisualClassifier("McNuggets_897931682");
+            //VisualClassifier vc9= new VisualClassifier("McNuggets_897931682");
+            result = service.classify(image, vc1, vc2, vc3, vc4, vc5, vc6, vc7, vc8);
             String result1 = result.toString();
             Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");
             Matcher matcher = pattern.matcher(result1);
