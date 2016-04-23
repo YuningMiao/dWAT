@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dWAT.iml" filepath="$PROJECT_DIR$/dWAT.iml" />
       <module fileurl="file://$PROJECT_DIR$/dWATVS.iml" filepath="$PROJECT_DIR$/dWATVS.iml" />
     </modules>
   </component>

@@ -55,6 +55,11 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="dwat.app.Main_Screen"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
             android:name="dwat.app.Suggestion_Screen"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
