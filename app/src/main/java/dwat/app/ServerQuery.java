@@ -204,7 +204,7 @@ public class ServerQuery {
         }
     }
 
-    public void RequestMenu(String manufacturer, Suggestion_Screen ss) {
+    public void RequestMenu(String manufacturer, Main_Screen ss) {
         try {
             JSONObject reqObj = new JSONObject();
             reqObj.put("data", "menu");
