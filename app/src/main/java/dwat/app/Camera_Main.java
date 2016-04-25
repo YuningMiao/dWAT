@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,12 +16,10 @@ import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ibm.watson.developer_cloud.visual_recognition.v2.VisualRecognition;
@@ -30,14 +27,9 @@ import com.ibm.watson.developer_cloud.visual_recognition.v2.model.VisualClassifi
 import com.ibm.watson.developer_cloud.visual_recognition.v2.model.VisualClassifier;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,32 +38,15 @@ public class Camera_Main extends FragmentActivity {
 
     private static final int CAMERA_REQUEST = 1888;
     private ImageView picImg;
-    String curDate;
     String curLoc;
     long time;
     RelativeLayout screen;
     File f;
-    ArrayList<String> header = new ArrayList<String>();
-    HashMap<String, List<String>> hashMap = new HashMap<String, List<String>>();
+    MealEntry buildingMeal = new MealEntry();
 
-    ArrayList<String> tags = new ArrayList<String>(Arrays.asList("Tag 1", "Tag 2", "Tag 3"));
+    ArrayList<String> tags = new ArrayList<>(Arrays.asList("Tag 1", "Tag 2", "Tag 3"));
     ListView photoTags;
     ArrayAdapter<String> tagAdapter;
-
-    private String getCurDate() {
-        Calendar c = Calendar.getInstance();
-
-        curDate = c.get(Calendar.MONTH) + 1 + "-" + c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.YEAR) + " ";
-        curDate += c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
-        return curDate;
-    }
-
-    private String getCurLocation() {
-        if(curLoc == null || curLoc == "")
-            return null;
-        else
-            return curLoc;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,14 +54,6 @@ public class Camera_Main extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-//        Intent locationIntent = getIntent();
-//        Bundle extras = locationIntent.getExtras();
-//        if(extras != null){
-////            if(extras.containsKey("location"))
-////                curLoc = extras.getString("location");
-//            if(extras.containsKey("time"))
-//                time = extras.getLong("time");
-//        }
         curLoc = getIntent().getStringExtra("location");
         time = getIntent().getLongExtra("time", 0L);
 
@@ -95,7 +62,7 @@ public class Camera_Main extends FragmentActivity {
         screen = (RelativeLayout) findViewById(R.id.cameraScreen);
         screen.setOnTouchListener(new OnSwipeTouchListener(Camera_Main.this) {
             public void onSwipeRight() {
-                Intent swipeIntent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+                Intent swipeIntent = new Intent(Camera_Main.this, Main_Screen.class);
                 swipeIntent.putExtra("location", curLoc);
                 swipeIntent.putExtra("time", time);
                 startActivity(swipeIntent);
@@ -114,7 +81,7 @@ public class Camera_Main extends FragmentActivity {
         backBttn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent backIntent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+                Intent backIntent = new Intent(Camera_Main.this, Main_Screen.class);
                 backIntent.putExtra("location", curLoc);
                 backIntent.putExtra("time", time);
                 startActivity(backIntent);
@@ -124,15 +91,8 @@ public class Camera_Main extends FragmentActivity {
         addBttn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                History newMeal;
-                if (getCurLocation() == null) {
-                    newMeal = new History("Tags", getCurDate());
-                } else
-                    newMeal = new History("Tags", getCurDate(), getCurLocation());
-                Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
-
                 Intent addIntent = new Intent(Camera_Main.this, History_Screen.class);
-                addIntent.putExtra("meal", newMeal);
+                addIntent.putExtra("meal", buildingMeal);
                 addIntent.putExtra("time", time);
                 startActivity(addIntent);
             }
@@ -140,107 +100,35 @@ public class Camera_Main extends FragmentActivity {
 
         tagAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, R.id.textView, tags);
         photoTags = (ListView) findViewById(R.id.photoTags);
-//        photoTags.setGroupIndicator(null);
-
 
         photoTags.setAdapter(tagAdapter);
         photoTags.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                History newMeal;
-                if (getCurLocation() == null) {
-                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate());
-                } else
-                    newMeal = new History(parent.getAdapter().getItem(position).toString(), getCurDate(), getCurLocation());
-                Toast.makeText(getApplicationContext(), newMeal.getHist(), Toast.LENGTH_SHORT).show();
+                if(ServerQuery.menu != null) {
+                    for(ServerQuery.FoodDescription fd : ServerQuery.menu) {
+                        if(fd.FoodName.contains(tags.get(position))) {
+                            buildingMeal.foods.add(fd.FoodName);
+                            break;
+                        }
+                    }
+                }
 
                 Intent intent = new Intent(Camera_Main.this, History_Screen.class);
-                intent.putExtra("meal", newMeal);
+                intent.putExtra("meal", buildingMeal);
                 startActivity(intent);
             }
         });
     }
 
-//    void setItems(String parent, List<String> children) {
-//        // Array list for child items
-//        List<String> child = new ArrayList<String>();
-//
-//        // Hash map for both header and child
-//
-//
-//        // Adding headers to list
-//        header.add(parent);
-//        for(int i = 0; i < children.size(); i++){
-//            child.add(parent + " : " + i);
-//        }
-//
-//        hashMap.put(header.get(header.size() - 1), child);
-//
-//
-//    }
-
-    // Setting different listeners to expandablelistview
-//    void setListener() {
-//
-//        // This listener will show toast on group click
-//        photoTags.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
-//
-//            @Override
-//            public boolean onGroupClick(ExpandableListView listview, View view,
-//                                        int group_pos, long id) {
-//
-//                Toast.makeText(Camera_Main.this,
-//                        "You clicked : " + tagAdapter.getGroup(group_pos),
-//                        Toast.LENGTH_SHORT).show();
-//                return false;
-//            }
-//        });
-//
-//        // This listener will expand one group at one time
-//        // You can remove this listener for expanding all groups
-//        photoTags.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
-//
-//            // Default position
-//            int previousGroup = -1;
-//
-//            @Override
-//            public void onGroupExpand(int groupPosition) {
-//                if (groupPosition != previousGroup)
-//
-//                    // Collapse the expanded group
-//                    photoTags.collapseGroup(previousGroup);
-//                previousGroup = groupPosition;
-//    }
-//
-//        });
-//
-//        // This listener will show toast on child click
-//        photoTags.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
-//
-//            @Override
-//            public boolean onChildClick(ExpandableListView listview, View view,int groupPos, int childPos, long id) {
-//                Toast.makeText(Camera_Main.this, "You clicked : " + tagAdapter.getChild(groupPos, childPos),Toast.LENGTH_SHORT).show();
-//                return false;
-//            }
-//        });
-//    }
-
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-            f = new File(Environment.getExternalStorageDirectory().toString());
-            for (File temp : f.listFiles()) {
-                if (temp.getName().equals("temp.jpg")) {
-                    f = temp;
-                    break;
-                }
-            }
+            f = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
             try {
                 Bitmap photo;
                 BitmapFactory.Options photoOptions = new BitmapFactory.Options();
                 photo = BitmapFactory.decodeFile(f.getAbsolutePath(), photoOptions);
-
-//                File image = new File(f.getAbsolutePath());
 
                 // make photo portrait and set placeholder
                 Matrix matrix = new Matrix();
@@ -259,7 +147,7 @@ public class Camera_Main extends FragmentActivity {
 
     @Override
     public void onBackPressed() {
-        Intent backIntent = new Intent(Camera_Main.this, Suggestion_Screen.class);
+        Intent backIntent = new Intent(Camera_Main.this, Main_Screen.class);
         startActivity(backIntent);
     }
 
@@ -271,37 +159,32 @@ public class Camera_Main extends FragmentActivity {
         ProgressDialog pd;
 
         protected Integer doInBackground(Void... params){
-            service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
-            service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
-            //image = new File(Environment.getExternalStorageDirectory().toString() + "temp.jpg");;
-            //image = params[0].getAbsoluteFile();
+            try {
+                service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
+                service.setUsernameAndPassword("0bd21bc5-408e-4b92-9035-635ff00d83a9", "vBul4aWoQFIL");
 
-            File image = new File(Environment.getExternalStorageDirectory().toString());
-            for (File temp : image.listFiles()) {
-                if (temp.getName().equals("temp.jpg")) {
-                    image = temp;
-                    break;
+
+                File image = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
+                VisualClassifier vc1 = new VisualClassifier("fries_179891096");
+                VisualClassifier vc2 = new VisualClassifier("filetofish_1528503474");
+                VisualClassifier vc3 = new VisualClassifier("hashbrown_220034101");
+                VisualClassifier vc4 = new VisualClassifier("BigMac_997392234");
+                VisualClassifier vc5 = new VisualClassifier("BeefandCheddar_847972216");
+                VisualClassifier vc6 = new VisualClassifier("CurlyFries_456201371");
+                VisualClassifier vc7 = new VisualClassifier("RoastBeef_1621569146");
+                VisualClassifier vc8 = new VisualClassifier("McNuggets_897931682");
+                //VisualClassifier vc9= new VisualClassifier("McNuggets_897931682");
+                result = service.classify(image, vc1, vc2, vc3, vc4, vc5, vc6, vc7, vc8);
+                String result1 = result.toString();
+                Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");
+                Matcher matcher = pattern.matcher(result1);
+                results = new ArrayList<String>(20);
+                while (matcher.find()) {
+                    System.out.println(matcher.group(1));
+
+                    results.add(matcher.group(1));
                 }
-            }
-            VisualClassifier vc1 = new VisualClassifier("fries_179891096");
-            VisualClassifier vc2 = new VisualClassifier("filetofish_1528503474");
-            VisualClassifier vc3 = new VisualClassifier("hashbrown_220034101");
-            VisualClassifier vc4 = new VisualClassifier("BigMac_997392234");
-            VisualClassifier vc5 = new VisualClassifier("BeefandCheddar_847972216");
-            VisualClassifier vc6 = new VisualClassifier("CurlyFries_456201371");
-            VisualClassifier vc7 = new VisualClassifier("RoastBeef_1621569146");
-            VisualClassifier vc8 = new VisualClassifier("McNuggets_897931682");
-            //VisualClassifier vc9= new VisualClassifier("McNuggets_897931682");
-            result = service.classify(image, vc1, vc2, vc3, vc4, vc5, vc6, vc7, vc8);
-            String result1 = result.toString();
-            Pattern pattern = Pattern.compile("\"name\": \"(.*?)\",");
-            Matcher matcher = pattern.matcher(result1);
-            results = new ArrayList<String>(20);
-            while (matcher.find()) {
-                System.out.println(matcher.group(1));
-
-                results.add(matcher.group(1));
-            }
+            } catch(VerifyError e) { Log.d("CAMM", e.toString()); }
             return 1;
         }
 
@@ -311,20 +194,23 @@ public class Camera_Main extends FragmentActivity {
         }
 
         protected void onPostExecute(Integer result){
-            pd.dismiss();
+            if(pd != null)
+                pd.dismiss();
 
             tags.clear();
-            List<String> children = new ArrayList<>();
-            for(int i = 0; i < results.size(); i++){
-                tags.add(results.get(i));
-//                setItems(results.get(i), children);
+            if(results != null) {
+                for (int i = 0; i < results.size(); i++) {
+                    if(ServerQuery.menu != null) {
+                        for(ServerQuery.FoodDescription fd : ServerQuery.menu) {
+                            if(fd.FoodName.contains(results.get(i))) {
+                                tags.add(results.get(i));
+                                break;
+                            }
+                        }
+                    }
+                }
+                tagAdapter.notifyDataSetChanged();
             }
-            tagAdapter.notifyDataSetChanged();
-//
-//            tagAdapter = new dwat.app.ExpandableListAdapter(Camera_Main.this, header, hashMap);
-
-//            photoTags.setAdapter(tagAdapter);
-//            setListener();
             f.delete();
         }
     }

@@ -17,14 +17,14 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class ServerQuery {
-    public static ArrayList<MealEntry> menu = null;
+    public static ArrayList<FoodDescription> menu = new ArrayList<>();
 
     public class FoodDescription {
         public String FoodManf;
         public String FoodName;
         public String Type;
         public boolean HasModifiers;
-        public String[] Modifiers;
+        public String Modifiers;
         public String[] BadModifiers;
         public int ServingSize;
         public int Calories;
@@ -53,8 +53,8 @@ public class ServerQuery {
     private class SendServerMenuQuery extends AsyncTask<Object, String, Object> {
         protected Object doInBackground(Object... o) {
             int count = o.length;
-            if(!(o[0] instanceof String)) return -1L;
-            if(!(o[1] instanceof Suggestion_Screen)) return -1L;
+            if(count <= 0 || !(o[0] instanceof String)) return -1L;
+            if(count <= 1 || !(o[1] instanceof Main_Screen)) return -1L;
 
             URL url;
             try {
@@ -64,7 +64,7 @@ public class ServerQuery {
                 return null;
             }
             String message = (String)o[0];
-            Suggestion_Screen ss = (Suggestion_Screen)o[1];
+            Main_Screen ss = (Main_Screen)o[1];
 
             try {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -93,19 +93,17 @@ public class ServerQuery {
                         menu[i].FoodName = obj.getString("FoodName");
                         menu[i].HasModifiers = obj.getBoolean("HasModifiers");
                         if(menu[i].HasModifiers && obj.has("Modifiers")) {
-                            JSONArray arr = obj.getJSONArray("Modifiers");
-                            menu[i].Modifiers = new String[arr.length()];
-                            for(int j=0;j<arr.length();j++) {
-                                menu[i].Modifiers[j] = arr.getString(j);
-                            }
-                            arr = obj.getJSONArray("BadModifiers");
+                            menu[i].Modifiers = obj.getString("Modifiers");
+                            menu[i].FoodName = menu[i].FoodName.replace(menu[i].Modifiers, "");
+                            JSONArray arr = obj.getJSONArray("BadModifiers");
                             menu[i].BadModifiers = new String[arr.length()];
                             for(int j=0;j<arr.length();j++) {
                                 menu[i].BadModifiers[j] = arr.getString(j);
+                                menu[i].Modifiers = menu[i].Modifiers.replace(menu[i].BadModifiers[j], "");
                             }
                         }
                     }
-                    ss.updateLocValues(menu);
+                    ss.setMenuValues(menu);
                     return menu;
                 } else {
                     Log.d("SERVCOMM", "Bad response: " + connection.getResponseCode());
@@ -128,8 +126,8 @@ public class ServerQuery {
     private class SendServerFoodDescRequest extends AsyncTask<Object, Object, Object> {
         protected Object doInBackground(Object... o) {
             int count = o.length;
-            if(!(o[0] instanceof String)) return -1L;
-            if(!(o[1] instanceof History_Screen)) return -1L;
+            if(count <= 0 || !(o[0] instanceof String)) return -1L;
+            if(count <= 1 || !(o[1] instanceof History_Screen)) return -1L;
 
             URL url;
             try {
@@ -149,6 +147,7 @@ public class ServerQuery {
                 OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
                 writer.write(message);
                 writer.close();
+                Log.d("SERVCOMM", "Sent message: " + message);
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     StringBuffer result = new StringBuffer();
@@ -167,12 +166,8 @@ public class ServerQuery {
                         fd.Type = respObj.getString("Type");
                         fd.HasModifiers = respObj.getBoolean("HasModifiers");
                         if(fd.HasModifiers && respObj.has("Modifiers")) {
-                            JSONArray arr = respObj.getJSONArray("Modifiers");
-                            fd.Modifiers = new String[arr.length()];
-                            for(int i=0;i<arr.length();i++) {
-                                fd.Modifiers[i] = arr.getString(i);
-                            }
-                            arr = respObj.getJSONArray("Modifiers");
+                            fd.Modifiers = respObj.getString("Modifiers");
+                            JSONArray arr = respObj.getJSONArray("BadModifiers");
                             fd.BadModifiers = new String[arr.length()];
                             for(int i=0;i<arr.length();i++) {
                                 fd.BadModifiers[i] = arr.getString(i);
@@ -216,11 +211,12 @@ public class ServerQuery {
         }
     }
 
-    public void RequestFoodDescription(String manufacturer, String foodname, History_Screen hs) {
+    public void RequestFoodDescription(String manufacturer, ArrayList<String> foodname, ArrayList<String> modifiers, History_Screen hs) {
         try {
             JSONObject reqObj = new JSONObject();
             reqObj.put("data", "fooddesc");
-            reqObj.put("foodname", foodname);
+            reqObj.put("foodname", new JSONArray(foodname));
+            reqObj.put("modifier", new JSONArray(modifiers));
             reqObj.put("manf", manufacturer);
 
             new SendServerFoodDescRequest().execute((Object)reqObj.toString(), (Object)hs);

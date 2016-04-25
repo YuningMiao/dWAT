@@ -26,17 +26,19 @@ public class UserPreferences {
                 value +=1;
             }
         }
-        if(String.format("%tA",meal.date).equals(String.format("%tA",date))){
-            value += 0.3;
-        }
-        int currentHour = Integer.parseInt(String.format("%tH",date));
-        int mealHour = Integer.parseInt(String.format("%tH", meal.date));
-        if(Math.abs(currentHour-mealHour) < 4){
-            value += (4 - Math.abs(currentHour-mealHour))*0.1;
+        if(meal.date.size() > 0) {
+            if (String.format("%tA", meal.date.get(0)).equals(String.format("%tA", date))) {
+                value += 0.3;
+            }
+            int currentHour = Integer.parseInt(String.format("%tH", date));
+            int mealHour = Integer.parseInt(String.format("%tH", meal.date.get(0)));
+            if (Math.abs(currentHour - mealHour) < 4) {
+                value += (4 - Math.abs(currentHour - mealHour)) * 0.1;
+            }
         }
         if(maxCount > 5)
             maxCount = maxCount/2;
-        value += (double)meal.count/(double)maxCount;
+        value += (double)meal.count()/(double)maxCount;
         return value;
     }
 
@@ -48,8 +50,8 @@ public class UserPreferences {
             size++;
             if(meal == null) {
                 break;
-            } else if (meal != null && meal.count > maxCount) {
-                maxCount = meal.count;
+            } else if (meal != null && meal.count() > maxCount) {
+                maxCount = meal.count();
             }
         }
         Log.d("UPREF", "MaxCount: " + maxCount);
@@ -57,7 +59,8 @@ public class UserPreferences {
             userHistory[i].value = valueFunction(userHistory[i], location, date, maxCount);
         }
         long start = System.currentTimeMillis();
-        quickSort(userHistory, 0, size - 1);
+        if(userHistory.length > 1)
+            quickSort(userHistory, 0, size - 1);
         long end = System.currentTimeMillis();
         Log.d("UPREF", "User Pref quicksort took " + (end-start) + " msec");
         return userHistory;
@@ -87,6 +90,4 @@ public class UserPreferences {
         if (i < higherIndex)
             quickSort(mes, i, higherIndex);
     }
-
-
 }
