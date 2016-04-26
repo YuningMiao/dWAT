@@ -58,7 +58,7 @@
 
 
     <ImageView
-        android:src="@drawable/cam_hist"
+        android:src="@drawable/hist_ss"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/swipeLeft"
@@ -67,7 +67,7 @@
         android:alpha=".75"/>
 
     <ImageView
-        android:src="@drawable/cam_ss"
+        android:src="@drawable/ss_hist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/swipeRight"

@@ -111,14 +111,15 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
                     startActivity(intent);
                 } else {
                     String item = listAdapter.getItem(position);
-                    list.getChildAt(position).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
                     if(buildingMeal.foods.contains(item)) {
                         buildingMeal.remove(item);
+                        list.getChildAt(position).setBackgroundColor(getResources().getColor(android.R.color.transparent));
                     } else if (modifierMap.containsKey(item) && modifierMap.get(item).size() > 0) {
                         ArrayList<String> list = modifierMap.get(item);
-                        makeAlert("Choose a size", item, DwatUtil.toArray(list));
+                        makeAlert("Choose a size", item, DwatUtil.toArray(list), position);
                     } else {
                         buildingMeal.add(item, "");
+                        list.getChildAt(position).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
                     }
                 }
             }
@@ -139,6 +140,7 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
                 Intent intent = new Intent(Main_Screen.this, Camera_Main.class);
                 intent.putExtra("location", curLoc);
                 intent.putExtra("meal", buildingMeal);
+                intent.putExtra("modmap", modifierMap);
                 intent.putExtra("time", timeNow);
                 startActivity(intent);
             }
@@ -149,6 +151,8 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), Camera_Main.class);
+                intent.putExtra("meal", buildingMeal);
+                intent.putExtra("modmap", modifierMap);
                 intent.putExtra("location", curLoc);
                 intent.putExtra("time", timeNow);
                 startActivityForResult(intent, 0);
@@ -253,7 +257,15 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
     }
 
     protected void invokeUserPreferences() {
-        MealEntry[] meals = DwatUtil.toArray3(UserPreferences.userHistory);
+        ArrayList<MealEntry> locationPref = new ArrayList<MealEntry>();
+        locationPref.addAll(UserPreferences.userHistory);
+        for(int i=0;i<locationPref.size();i++) {
+            if(!locationPref.get(i).location.equals(curLoc)) {
+                locationPref.remove(i);
+                i--;
+            }
+        }
+        MealEntry[] meals = DwatUtil.toArray3(locationPref);
         meals = UserPreferences.userPreference(meals, curLoc, new Date());
         historyVals.clear();
         historyIndexes.clear();
@@ -284,13 +296,14 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
         }
     }
 
-    private void makeAlert(String title, final String foodname, final String[] choices) {
+    private void makeAlert(String title, final String foodname, final String[] choices, final int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(Main_Screen.this);
         builder.setTitle(title);
         builder.setItems(choices, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 buildingMeal.add(foodname, choices[which]);
+                list.getChildAt(position).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
             }
         });
 

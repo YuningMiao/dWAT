@@ -1,6 +1,8 @@
 package dwat.app;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,6 +32,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,7 +48,8 @@ public class Camera_Main extends FragmentActivity {
     File f;
     MealEntry buildingMeal = new MealEntry();
 
-    ArrayList<String> tags = new ArrayList<>(Arrays.asList("Tag 1", "Tag 2", "Tag 3"));
+    ArrayList<String> tags = new ArrayList<>();
+    HashMap<String, ArrayList<String>> modifierMap;
     ListView photoTags;
     ArrayAdapter<String> tagAdapter;
 
@@ -54,6 +59,8 @@ public class Camera_Main extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        modifierMap = (HashMap<String, ArrayList<String>>) getIntent().getSerializableExtra("modmap");
+        buildingMeal = (MealEntry) getIntent().getSerializableExtra("meal");
         curLoc = getIntent().getStringExtra("location");
         time = getIntent().getLongExtra("time", 0L);
 
@@ -61,9 +68,19 @@ public class Camera_Main extends FragmentActivity {
 
         screen = (RelativeLayout) findViewById(R.id.cameraScreen);
         screen.setOnTouchListener(new OnSwipeTouchListener(Camera_Main.this) {
-            public void onSwipeRight() {
+            public void onSwipeLeft() {
                 Intent swipeIntent = new Intent(Camera_Main.this, Main_Screen.class);
+                swipeIntent.putExtra("meal", buildingMeal);
                 swipeIntent.putExtra("location", curLoc);
+                swipeIntent.putExtra("time", time);
+                startActivity(swipeIntent);
+            }
+            public void onSwipeRight() {
+                Intent swipeIntent = new Intent(Camera_Main.this, History_Screen.class);
+                buildingMeal.location = curLoc;
+                buildingMeal.date.add(new Date());
+                swipeIntent.putExtra("meal", buildingMeal);
+                swipeIntent.putExtra("location", buildingMeal.location);
                 swipeIntent.putExtra("time", time);
                 startActivity(swipeIntent);
             }
@@ -91,7 +108,7 @@ public class Camera_Main extends FragmentActivity {
         addBttn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent addIntent = new Intent(Camera_Main.this, History_Screen.class);
+                Intent addIntent = new Intent(Camera_Main.this, Camera_Main.class);
                 addIntent.putExtra("meal", buildingMeal);
                 addIntent.putExtra("time", time);
                 startActivity(addIntent);
@@ -108,17 +125,43 @@ public class Camera_Main extends FragmentActivity {
                 if(ServerQuery.menu != null) {
                     for(ServerQuery.FoodDescription fd : ServerQuery.menu) {
                         if(fd.FoodName.contains(tags.get(position))) {
-                            buildingMeal.foods.add(fd.FoodName);
+                            String item = tags.get(position);
+                            if(buildingMeal.foods.contains(item)) {
+                                buildingMeal.remove(fd.FoodName);
+                                photoTags.getChildAt(position).setBackgroundColor(getResources().getColor(android.R.color.transparent));
+                            } else if(modifierMap.containsKey(item) && modifierMap.get(item).size() > 0) {
+                                ArrayList<String> list = modifierMap.get(item);
+                                makeAlert("Choose a size", item, DwatUtil.toArray(list), position);
+                            }  else {
+                                buildingMeal.add(fd.FoodName, fd.Modifiers);
+                                photoTags.getChildAt(position).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
+                            }
                             break;
                         }
                     }
                 }
 
-                Intent intent = new Intent(Camera_Main.this, History_Screen.class);
+                /*Intent intent = new Intent(Camera_Main.this, History_Screen.class);
                 intent.putExtra("meal", buildingMeal);
-                startActivity(intent);
+                startActivity(intent);*/
             }
         });
+    }
+
+    private void makeAlert(String title, final String foodname, final String[] choices, final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(Camera_Main.this);
+        builder.setTitle(title);
+        builder.setItems(choices, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                buildingMeal.add(foodname, choices[which]);
+                photoTags.getChildAt(position).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
+            }
+        });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -165,14 +208,14 @@ public class Camera_Main extends FragmentActivity {
 
 
                 File image = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
-                VisualClassifier vc1 = new VisualClassifier("fries_179891096");
-                VisualClassifier vc2 = new VisualClassifier("filetofish_1528503474");
-                VisualClassifier vc3 = new VisualClassifier("hashbrown_220034101");
+                VisualClassifier vc1 = new VisualClassifier("FrenchFries_1081543305");
+                VisualClassifier vc2 = new VisualClassifier("FiletOFish_1218850016");
+                VisualClassifier vc3 = new VisualClassifier("HashBrowns_340212582");
                 VisualClassifier vc4 = new VisualClassifier("BigMac_997392234");
-                VisualClassifier vc5 = new VisualClassifier("BeefandCheddar_847972216");
+                VisualClassifier vc5 = new VisualClassifier("BeefnCheddar_814647028");
                 VisualClassifier vc6 = new VisualClassifier("CurlyFries_456201371");
                 VisualClassifier vc7 = new VisualClassifier("RoastBeef_1621569146");
-                VisualClassifier vc8 = new VisualClassifier("McNuggets_897931682");
+                VisualClassifier vc8 = new VisualClassifier("ChickenMcNuggets_894203528");
                 //VisualClassifier vc9= new VisualClassifier("McNuggets_897931682");
                 result = service.classify(image, vc1, vc2, vc3, vc4, vc5, vc6, vc7, vc8);
                 String result1 = result.toString();
