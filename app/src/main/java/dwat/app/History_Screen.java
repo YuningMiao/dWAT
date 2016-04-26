@@ -42,6 +42,13 @@ public class History_Screen extends Activity {
                 intent.putExtra("time", time);
                 startActivity(intent);
             }
+//            public void onSwipeRight() {
+//                Intent intent = new Intent(History_Screen.this, Camera_Main.class);
+//                intent.putExtra("location", location);
+////                intent.putExtra("meal", buildingMeal);
+//                intent.putExtra("time", time);
+//                startActivity(intent);
+//            }
         });
 
         history = (ListView) findViewById(R.id.histList);

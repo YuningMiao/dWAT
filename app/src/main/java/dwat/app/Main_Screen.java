@@ -111,6 +111,7 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
                     startActivity(intent);
                 } else {
                     String item = listAdapter.getItem(position);
+                    list.getChildAt(position).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
                     if(buildingMeal.foods.contains(item)) {
                         buildingMeal.remove(item);
                     } else if (modifierMap.containsKey(item) && modifierMap.get(item).size() > 0) {
@@ -194,8 +195,8 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
                 } else if(tab.getPosition() == 1){
                     listAdapter = new ArrayAdapter<>(Main_Screen.this, R.layout.activity_listview, R.id.textView, menuVals);
                     list.setAdapter(listAdapter);
-                    list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-                    list.setSelector(R.color.dwatGreen);
+//                    list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+//                    list.setSelector(R.color.dwatBlue);
                     commitOnClick = false;
                     Log.d("MS", "Tab changed to menu");
                 }
