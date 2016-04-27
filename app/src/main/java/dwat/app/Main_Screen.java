@@ -54,8 +54,8 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
     ArrayList<String> locs;
     HashMap<String, ArrayList<String>> modifierMap = new HashMap<>();
     ArrayList<String> historyVals = new ArrayList<>();
-    ArrayList<Integer> historyIndexes = new ArrayList<>();
     ArrayList<String> menuVals = new ArrayList<>();
+    MealEntry[] historyMeals;
     ArrayAdapter<String> listAdapter;
     boolean commitOnClick = true;
 
@@ -104,10 +104,11 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (commitOnClick) {
+                if (commitOnClick && position < historyMeals.length) {
                     Intent intent = new Intent(Main_Screen.this, History_Screen.class);
-                    Log.d("MS", "Committing: " + UserPreferences.userHistory.get(historyIndexes.get(position)).toString());
-                    intent.putExtra("meal", UserPreferences.userHistory.get(historyIndexes.get(position)));
+                    int mealPos = historyMeals.length-1-position;
+                    Log.d("MS", "Committing: " + historyMeals[mealPos].toString());
+                    intent.putExtra("meal", historyMeals[mealPos]);
                     startActivity(intent);
                 } else {
                     String item = listAdapter.getItem(position);
@@ -199,8 +200,6 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
                 } else if(tab.getPosition() == 1){
                     listAdapter = new ArrayAdapter<>(Main_Screen.this, R.layout.activity_listview, R.id.textView, menuVals);
                     list.setAdapter(listAdapter);
-//                    list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-//                    list.setSelector(R.color.dwatBlue);
                     commitOnClick = false;
                     Log.d("MS", "Tab changed to menu");
                 }
@@ -259,41 +258,36 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
     protected void invokeUserPreferences() {
         ArrayList<MealEntry> locationPref = new ArrayList<MealEntry>();
         locationPref.addAll(UserPreferences.userHistory);
-        for(int i=0;i<locationPref.size();i++) {
-            if(!locationPref.get(i).location.equals(curLoc)) {
+        for (int i = 0; i < locationPref.size(); i++) {
+            if (!locationPref.get(i).location.equals(curLoc)) {
                 locationPref.remove(i);
                 i--;
             }
         }
-        MealEntry[] meals = DwatUtil.toArray3(locationPref);
-        meals = UserPreferences.userPreference(meals, curLoc, new Date());
         historyVals.clear();
-        historyIndexes.clear();
-        for(int i=meals.length-1;i>=Math.max(meals.length-10, 0);i--) {
-            historyVals.add(meals[i].toString());
-            for(int j=0;j<UserPreferences.userHistory.size();j++) {
-                if(UserPreferences.userHistory.get(j).equals(meals[i])) {
-                    historyIndexes.add(i);
-                    break;
+        historyMeals = DwatUtil.toArray3(locationPref);
+        historyMeals = UserPreferences.userPreference(historyMeals, curLoc, new Date());
+        for (int i = historyMeals.length - 1; i >= Math.max(historyMeals.length - 10, 0); i--) {
+            historyVals.add(historyMeals[i].toString());
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (historyVals.size() <= 0) {
+                        tabFunc.onTabSelected(tabLayout.getTabAt(1));
+                        Log.d("UPREF", "Changed tab to menu");
+                    } else {
+                        tabFunc.onTabSelected(tabLayout.getTabAt(0));
+                        Log.d("UPREF", "Changed tab to suggestion");
+                        listAdapter.notifyDataSetChanged();
+                    }
+                } catch (Exception e) {
+                    Log.d("SERVCOMM", "Exception: " + e.toString());
                 }
             }
-        }
-        if(commitOnClick) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if(historyVals.size() <= 0) {
-                            tabFunc.onTabSelected(tabLayout.getTabAt(1));
-                        } else {
-                            listAdapter.notifyDataSetChanged();
-                        }
-                    } catch (Exception e) {
-                        Log.d("SERVCOMM", "Exception: " + e.toString());
-                    }
-                }
-            });
-        }
+        });
+
     }
 
     private void makeAlert(String title, final String foodname, final String[] choices, final int position) {
