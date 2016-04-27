@@ -42,13 +42,12 @@ public class Camera_Main extends FragmentActivity {
 
     private static final int CAMERA_REQUEST = 1888;
     private ImageView picImg;
-    String curLoc;
     long time;
     RelativeLayout screen;
     File f;
     MealEntry buildingMeal = new MealEntry();
 
-    ArrayList<String> tags = new ArrayList<>();
+    ArrayList<String> tags = new ArrayList<>(/*Arrays.asList("Big Mac","2","3")*/);
     HashMap<String, ArrayList<String>> modifierMap;
     ListView photoTags;
     ArrayAdapter<String> tagAdapter;
@@ -61,9 +60,6 @@ public class Camera_Main extends FragmentActivity {
 
         modifierMap = (HashMap<String, ArrayList<String>>) getIntent().getSerializableExtra("modmap");
         buildingMeal = (MealEntry) getIntent().getSerializableExtra("meal");
-        Log.e("HELLO", buildingMeal.toString());
-//        Log.e("HELLO")
-        curLoc = getIntent().getStringExtra("location");
         time = getIntent().getLongExtra("time", 0L);
 
         picImg = (ImageView)findViewById(R.id.foodPic);
@@ -73,13 +69,11 @@ public class Camera_Main extends FragmentActivity {
             public void onSwipeLeft() {
                 Intent swipeIntent = new Intent(Camera_Main.this, Main_Screen.class);
                 swipeIntent.putExtra("meal", buildingMeal);
-                swipeIntent.putExtra("location", curLoc);
                 swipeIntent.putExtra("time", time);
                 startActivity(swipeIntent);
             }
             public void onSwipeRight() {
                 Intent swipeIntent = new Intent(Camera_Main.this, History_Screen.class);
-                buildingMeal.location = curLoc;
                 buildingMeal.date.add(new Date());
                 swipeIntent.putExtra("meal", buildingMeal);
                 swipeIntent.putExtra("location", buildingMeal.location);
@@ -101,7 +95,7 @@ public class Camera_Main extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 Intent backIntent = new Intent(Camera_Main.this, Main_Screen.class);
-                backIntent.putExtra("location", curLoc);
+                backIntent.putExtra("location", buildingMeal.location);
                 backIntent.putExtra("time", time);
                 startActivity(backIntent);
             }
@@ -112,6 +106,7 @@ public class Camera_Main extends FragmentActivity {
             public void onClick(View v) {
                 Intent addIntent = new Intent(Camera_Main.this, Camera_Main.class);
                 addIntent.putExtra("meal", buildingMeal);
+                addIntent.putExtra("location", buildingMeal.location);
                 addIntent.putExtra("modmap", modifierMap);
                 addIntent.putExtra("time", time);
                 startActivity(addIntent);
@@ -177,10 +172,10 @@ public class Camera_Main extends FragmentActivity {
                 photo = BitmapFactory.decodeFile(f.getAbsolutePath(), photoOptions);
 
                 // make photo portrait and set placeholder
-                Matrix matrix = new Matrix();
+                /*Matrix matrix = new Matrix();
                 matrix.postRotate(90);
                 photo = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
-                picImg.setImageBitmap(photo);
+                picImg.setImageBitmap(photo);*/
 
                 new visual().execute();
 

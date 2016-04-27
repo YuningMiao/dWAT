@@ -83,7 +83,11 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
         timeNow = Calendar.getInstance().getTimeInMillis();
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            curLoc = extras.getString("location");
+            MealEntry meal = (MealEntry) extras.getSerializable("meal");
+            if(meal != null) {
+                buildingMeal = meal;
+                curLoc = meal.location;
+            }
             timeFromOther = extras.getLong("time");
         }
 
@@ -139,7 +143,7 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
 
             public void onSwipeLeft() {
                 Intent intent = new Intent(Main_Screen.this, Camera_Main.class);
-                intent.putExtra("location", curLoc);
+                buildingMeal.location = curLoc;
                 intent.putExtra("meal", buildingMeal);
                 intent.putExtra("modmap", modifierMap);
                 intent.putExtra("time", timeNow);
@@ -152,9 +156,9 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), Camera_Main.class);
+                buildingMeal.location = curLoc;
                 intent.putExtra("meal", buildingMeal);
                 intent.putExtra("modmap", modifierMap);
-                intent.putExtra("location", curLoc);
                 intent.putExtra("time", timeNow);
                 startActivityForResult(intent, 0);
             }
