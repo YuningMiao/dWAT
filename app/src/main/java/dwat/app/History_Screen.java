@@ -175,7 +175,7 @@ package dwat.app;
                 }
             }
         }
-        foodDesc += "<br><br><b><big>Nutrition Facts </big></b><br><b>Calories </b>" + cal + "<br><b>Total Fat</b> " + totFat + "<br>";
+        foodDesc += "<b><big>Nutrition Facts </big></b><br><b>Calories </b>" + cal + "<br><b>Total Fat</b> " + totFat + "<br>";
         foodDesc += "<small>Saturated Fat " + satFat+ "<br>" + "Trans Fat " + tranFat + "</small><br><b>Cholesterol </b>" + chol + "<br>Sodium " + sod;
         foodDesc += "<br><b>Total Carbohydrate </b>" + totCarb + "<br><small>Dietary Fiber " + fib + "<br>Sugars " + sug + "</small><br><b>Protein </b>" + prot;
 
