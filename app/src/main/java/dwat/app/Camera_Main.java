@@ -61,6 +61,8 @@ public class Camera_Main extends FragmentActivity {
 
         modifierMap = (HashMap<String, ArrayList<String>>) getIntent().getSerializableExtra("modmap");
         buildingMeal = (MealEntry) getIntent().getSerializableExtra("meal");
+        Log.e("HELLO", buildingMeal.toString());
+//        Log.e("HELLO")
         curLoc = getIntent().getStringExtra("location");
         time = getIntent().getLongExtra("time", 0L);
 
@@ -110,6 +112,7 @@ public class Camera_Main extends FragmentActivity {
             public void onClick(View v) {
                 Intent addIntent = new Intent(Camera_Main.this, Camera_Main.class);
                 addIntent.putExtra("meal", buildingMeal);
+                addIntent.putExtra("modmap", modifierMap);
                 addIntent.putExtra("time", time);
                 startActivity(addIntent);
             }

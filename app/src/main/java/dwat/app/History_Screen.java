@@ -1,35 +1,36 @@
 package dwat.app;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
+        import android.app.Activity;
+        import android.content.Intent;
+        import android.os.AsyncTask;
+        import android.os.Bundle;
+        import android.text.Html;
+        import android.util.Log;
+        import android.view.View;
+        import android.view.Window;
+        import android.widget.AdapterView;
+        import android.widget.ArrayAdapter;
+        import android.widget.ImageButton;
+        import android.widget.ListView;
+        import android.widget.RelativeLayout;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
+        import java.io.File;
+        import java.io.FileOutputStream;
+        import java.io.IOException;
+        import java.io.ObjectOutputStream;
+        import java.lang.reflect.Field;
+        import java.util.ArrayList;
 
-public class History_Screen extends Activity {
-    ListView history;
-    ArrayList<String> histValues = new ArrayList<>();
-    ArrayAdapter<String> histAdpt;
-    String location;
-    MealEntry meal;
-    RelativeLayout screen;
-    long time;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+        public class History_Screen extends Activity {
+            ListView history;
+            ArrayList<CharSequence> histValues = new ArrayList<>();
+            ArrayAdapter<CharSequence> histAdpt;
+            String location;
+            MealEntry meal;
+            RelativeLayout screen;
+            long time;
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
@@ -117,6 +118,7 @@ public class History_Screen extends Activity {
         if(fd == null) return;
 
         String foodDesc = "";
+        String fN = null, cal = null, calFat = null, totFat = null, satFat = null, tranFat = null, chol = null, sod = null, totCarb = null, fib = null, sug = null, prot = null;
         for (Field field : fd.getClass().getDeclaredFields()) {
             field.setAccessible(true); // You might want to set modifier to public first.
             Object value = null;
@@ -133,15 +135,52 @@ public class History_Screen extends Activity {
                     case "Modifiers":
                     case "BadModifiers":
                         break;
+                    case "Calories":
+                        cal = value + "";
+                        break;
+                    case "CaloriesFromFat":
+                        calFat = value + "";
+                        break;
+                    case "TotalFat":
+                        totFat = value + "";
+                        break;
+                    case "SaturatedFat":
+                        satFat = value + "";
+                        break;
+                    case "TransFat":
+                        tranFat = value + "";
+                        break;
+                    case "Cholesterol":
+                        chol = value + "";
+                        break;
+                    case "Sodium":
+                        sod = value + "";
+                        break;
+                    case "Carbohydrates":
+                        totCarb = value + "";
+                        break;
+                    case "DietaryFiber":
+                        fib = value + "";
+                        break;
+                    case "Sugars":
+                        sug = value + "";
+                        break;
+                    case "Protein":
+                        prot = value + "";
+                        break;
                     default:
-                        foodDesc += field.getName() + ": " + value + "\n";
+//                        foodDesc += String.format("%-15s %10s %n\n",field.getName(), value);
+//                        foodDesc += field.getName() + ": " + value + "\n";
                         break;
                 }
             }
         }
+        foodDesc += "<br><br><b><big>Nutrition Facts </big></b><br><b>Calories </b>" + cal + "<br><b>Total Fat</b> " + totFat + "<br>";
+        foodDesc += "<small>Saturated Fat " + satFat+ "<br>" + "Trans Fat " + tranFat + "</small><br><b>Cholesterol </b>" + chol + "<br>Sodium " + sod;
+        foodDesc += "<br><b>Total Carbohydrate </b>" + totCarb + "<br><small>Dietary Fiber " + fib + "<br>Sugars " + sug + "</small><br><b>Protein </b>" + prot;
 
         histValues.clear();
-        histValues.add(foodDesc);
+        histValues.add(Html.fromHtml(foodDesc));
         int count = 0;
         for(int i=UserPreferences.userHistory.size()-1;i>=0;i--) {
             if(UserPreferences.userHistory.get(i) != null && count < 10) {
