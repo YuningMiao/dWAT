@@ -83,8 +83,11 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
         timeNow = Calendar.getInstance().getTimeInMillis();
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            buildingMeal = (MealEntry) extras.getSerializable("meal");
-            curLoc = buildingMeal.location;
+            MealEntry meal = (MealEntry) extras.getSerializable("meal");
+            if(meal != null) {
+                buildingMeal = meal;
+                curLoc = meal.location;
+            }
             timeFromOther = extras.getLong("time");
         }
 
