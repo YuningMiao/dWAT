@@ -46,6 +46,7 @@ public class Camera_Main extends FragmentActivity {
     RelativeLayout screen;
     File f;
     MealEntry buildingMeal = new MealEntry();
+    boolean menuUpdated = true;
 
     ArrayList<String> tags = new ArrayList<>(/*Arrays.asList("Big Mac","2","3")*/);
     HashMap<String, ArrayList<String>> modifierMap;
@@ -69,6 +70,7 @@ public class Camera_Main extends FragmentActivity {
             public void onSwipeLeft() {
                 Intent swipeIntent = new Intent(Camera_Main.this, Main_Screen.class);
                 swipeIntent.putExtra("meal", buildingMeal);
+                swipeIntent.putExtra("sender", "CAMM");
                 swipeIntent.putExtra("time", time);
                 startActivity(swipeIntent);
             }
@@ -239,6 +241,7 @@ public class Camera_Main extends FragmentActivity {
                 pd.dismiss();
 
             tags.clear();
+
             if(results != null) {
                 for (int i = 0; i < results.size(); i++) {
                     if(ServerQuery.menu != null) {
@@ -252,6 +255,36 @@ public class Camera_Main extends FragmentActivity {
                 }
                 tagAdapter.notifyDataSetChanged();
             }
+            menuUpdated = false;
+            Thread t = new Thread(){
+                @Override
+                public void run() {
+                    while(true) {
+                        try {
+                            if(!menuUpdated && photoTags.getChildAt(0) != null) {
+                                for(int i=0;i<tags.size();i++) {
+                                    if(buildingMeal.foods.contains(tags.get(i))) {
+                                        final int i1 = i;
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                try {
+                                                    photoTags.getChildAt(i1).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
+                                                } catch (Exception e) {
+                                                    Log.d("SERVCOMM", "Exception: " + e.toString());
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                                menuUpdated = true;
+                            }
+                            Thread.sleep(100);
+                        } catch(InterruptedException e) {}
+                    }
+                }
+            };
+            t.start();
             f.delete();
         }
     }

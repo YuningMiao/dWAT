@@ -6,6 +6,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.design.widget.TabLayout;
@@ -14,6 +16,7 @@ import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -47,6 +50,8 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
     String curLoc;
     long timeFromOther;
     long timeNow;
+    boolean menuUpdated = true;
+    String sentScreen = null;
 
     TabLayout.OnTabSelectedListener tabFunc;
     ListView list;
@@ -82,11 +87,13 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
 
         timeNow = Calendar.getInstance().getTimeInMillis();
         Bundle extras = getIntent().getExtras();
+
         if (extras != null) {
             MealEntry meal = (MealEntry) extras.getSerializable("meal");
             if(meal != null) {
                 buildingMeal = meal;
                 curLoc = meal.location;
+                sentScreen = extras.getString("sender");
             }
             timeFromOther = extras.getLong("time");
         }
@@ -102,7 +109,7 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
         guessCurrentPlace(false);
 
         list = (ListView) findViewById(R.id.list);
-        listAdapter = new ArrayAdapter<>(this, R.layout.activity_listview, R.id.textView, historyVals);
+        listAdapter = new ArrayAdapter<String>(Main_Screen.this, R.layout.activity_listview, R.id.textView, historyVals);
         list.setAdapter(listAdapter);
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -110,13 +117,13 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (commitOnClick && position < historyMeals.length) {
                     Intent intent = new Intent(Main_Screen.this, History_Screen.class);
-                    int mealPos = historyMeals.length-1-position;
+                    int mealPos = historyMeals.length - 1 - position;
                     Log.d("MS", "Committing: " + historyMeals[mealPos].toString());
                     intent.putExtra("meal", historyMeals[mealPos]);
                     startActivity(intent);
                 } else {
                     String item = listAdapter.getItem(position);
-                    if(buildingMeal.foods.contains(item)) {
+                    if (buildingMeal.foods.contains(item)) {
                         buildingMeal.remove(item);
                         list.getChildAt(position).setBackgroundColor(getResources().getColor(android.R.color.transparent));
                     } else if (modifierMap.containsKey(item) && modifierMap.get(item).size() > 0) {
@@ -198,13 +205,43 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
                 if (tab.getPosition() == 0) {
                     listAdapter = new ArrayAdapter<>(Main_Screen.this, R.layout.activity_listview, R.id.textView, historyVals);
                     list.setAdapter(listAdapter);
-                    list.setSelector(android.R.color.transparent);
                     commitOnClick = true;
+                    list.setSelector(android.R.color.transparent);
                     Log.d("MS", "Tab changed to suggestion");
                 } else if(tab.getPosition() == 1){
-                    listAdapter = new ArrayAdapter<>(Main_Screen.this, R.layout.activity_listview, R.id.textView, menuVals);
-                    list.setAdapter(listAdapter);
                     commitOnClick = false;
+                    listAdapter = new ArrayAdapter<String>(Main_Screen.this, R.layout.activity_listview, R.id.textView, menuVals);
+                    menuUpdated = false;
+                    Thread t = new Thread(){
+                        @Override
+                        public void run() {
+                            while(true) {
+                                try {
+                                    if(!menuUpdated && !commitOnClick && list.getChildAt(0) != null) {
+                                        for(int i=0;i<menuVals.size();i++) {
+                                            if(buildingMeal.foods.contains(menuVals.get(i))) {
+                                                final int i1 = i;
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        try {
+                                                            list.getChildAt(i1).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
+                                                        } catch (Exception e) {
+                                                            Log.d("SERVCOMM", "Exception: " + e.toString());
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }
+                                        menuUpdated = true;
+                                    }
+                                    Thread.sleep(100);
+                                } catch(InterruptedException e) {}
+                            }
+                        }
+                    };
+                    t.start();
+                    list.setAdapter(listAdapter);
                     Log.d("MS", "Tab changed to menu");
                 }
 
@@ -222,7 +259,6 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
         };
 
         tabLayout.setOnTabSelectedListener(tabFunc);
-
         new ReadMealEntries().execute();
     }
 
@@ -278,7 +314,7 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
             @Override
             public void run() {
                 try {
-                    if (historyVals.size() <= 0) {
+                    if (historyVals.size() <= 0 || sentScreen != null) {
                         tabFunc.onTabSelected(tabLayout.getTabAt(1));
                         Log.d("UPREF", "Changed tab to menu");
                     } else {
@@ -318,14 +354,13 @@ public class Main_Screen extends FragmentActivity implements GoogleApiClient.OnC
                 if (!likelyPlaces.getStatus().isSuccess()) {
                     Log.e("GEO", "Place query didn't complete. Error: " + likelyPlaces.getStatus().toString());
                     likelyPlaces.release();
-                    return;
                 }
                 try {
                     locs = new ArrayList<String>();
 
                     PlaceLikelihood placeLikelihood;
                     String value;
-                    for (int i = 0; i < 5; i++) {
+                    for (int i = 0; likelyPlaces.isClosed(); i++) {
                         placeLikelihood = likelyPlaces.get(i);
                         value = placeLikelihood.getPlace().getName().toString() + " ";
                         value += String.format("%.1f", placeLikelihood.getLikelihood() * 100);
