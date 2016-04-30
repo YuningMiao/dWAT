@@ -1,13 +1,18 @@
 package dwat.app;
 
         import android.app.Activity;
+        import android.app.AlertDialog;
+        import android.content.DialogInterface;
         import android.content.Intent;
         import android.os.AsyncTask;
         import android.os.Bundle;
+        import android.os.Handler;
         import android.text.Html;
         import android.util.Log;
+        import android.view.Gravity;
         import android.view.View;
         import android.view.Window;
+        import android.view.WindowManager;
         import android.widget.AdapterView;
         import android.widget.ArrayAdapter;
         import android.widget.ImageButton;
@@ -28,6 +33,7 @@ package dwat.app;
             String location;
             MealEntry meal;
             RelativeLayout screen;
+            int pos;
             long time;
             @Override
             protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +61,34 @@ package dwat.app;
         history = (ListView) findViewById(R.id.histList);
         meal = (MealEntry) getIntent().getSerializableExtra("meal");
         if(meal != null && meal.location != null && meal.foods.size() > 0) {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this).setTitle("Meal committed");
+            final AlertDialog alert = dialog.create();
+            alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            WindowManager.LayoutParams wmlp = alert.getWindow().getAttributes();
+            wmlp.gravity = Gravity.TOP | Gravity.CENTER;
+
+            alert.show();
+
+            final Handler handler  = new Handler();
+            final Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (alert.isShowing()) {
+                        alert.dismiss();
+                    }
+                }
+            };
+
+            alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    handler.removeCallbacks(runnable);
+                }
+            });
+
+            handler.postDelayed(runnable, 2000);
+
+
             location = meal.location;
             ServerQuery sq = new ServerQuery();
             sq.RequestFoodDescription(meal.location, meal.foods, meal.modifiers, this);
@@ -64,6 +98,7 @@ package dwat.app;
                 if(meal.equals(m)) {
                     //the meal entries are the same
                     if (meal.date.size() > 0) m.date.add(meal.date.get(0));
+
                     mealEntryFound = true;
                     break;
                 }
@@ -74,12 +109,17 @@ package dwat.app;
         }
 
         int count = 0;
-        for(int i=UserPreferences.userHistory.size()-1;i>=0;i--) {
+        for(int i=UserPreferences.userHistory.size()-1;i>=1;i--) {
             if(histValues.size() == 0) { histValues.add(""); }
             if(UserPreferences.userHistory.get(i) != null && count < 10) {
+                if(UserPreferences.userHistory.get(i).equals(meal)){
+                    pos = histValues.size();
+                    Log.e("TAG", UserPreferences.userHistory.get(i).toString()  +"," +pos);
+                }
                 histValues.add(UserPreferences.userHistory.get(i).toString());
                 count ++;
             } else {
+//                pos = 1;
                 break;
             }
         }
@@ -199,6 +239,8 @@ package dwat.app;
             public void run() {
                 try {
                     histAdpt.notifyDataSetChanged();
+                    history.getChildAt(pos).setBackgroundColor(getResources().getColor(R.color.dwatBlue));
+//                    history.getChildAt(histAdpt.getPosition(histValues.get(2))).setBackgroundColor(getResources().getColor(android.R.color.transparent));
                 } catch (Exception e) {
                     Log.d("SERVCOMM", "Exception: " + e.getMessage());
                 }
